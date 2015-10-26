@@ -8,14 +8,14 @@
 #define SIZE (4096) //2^12, where 12 is the maxbits of a code
 
 
-//an entry in the hash table 
-struct entry {
-	struct entry *next_entry; //pointer used for chaining
-	int prefix; //code for prefix
-	int final_char; // last character
-	int code; // this entry's code.
-	int times_used; // for pruning: the times accessed
-};
+// //an entry in the hash table 
+// struct entry {
+// 	struct entry *next_entry; //pointer used for chaining
+// 	int prefix; //code for prefix
+// 	int final_char; // last character
+// 	int code; // this entry's code.
+// 	int times_used; // for pruning: the times accessed
+// };
 
 struct hash_table {
 	struct entry **table; //array of pointers to entries, for chaining
@@ -217,8 +217,14 @@ hashDelete(hash_table *h, int prefix, int final_char) {
 entry * 
 hashCodeLookup(hash_table *h, int code) {	
 
-	assert(code < h->n);
-	return &(h->codeArray[code]);
+	assert(code < 4096); //valid codes
+
+	if (code < h->n) return &(h->codeArray[code]);
+	else return NULL; // not
+
+
+	// assert(code < h->n);
+	// return &(h->codeArray[code]);
 }
 
 
@@ -327,6 +333,28 @@ hashPrintTable(hash_table *h, bool print_array)
 		}
 
 }
+
+// Return the prefix code for a given table and code
+int 
+hashGetPrefix(hash_table *h, int code)
+{
+	entry *e = hashCodeLookup(h, code);
+	assert(e);
+
+	return e->prefix;
+}
+
+// Return the final character for a given given table and code
+int 
+hashGetChar(hash_table *h, int code)
+{
+	entry *e = hashCodeLookup(h, code);
+	assert(e);
+
+	return e->final_char;
+
+}
+
 
 
 void string_print(hash_table *h, int code)

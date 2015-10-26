@@ -6,6 +6,12 @@
 typedef struct hash_table hash_table;
 typedef struct entry entry; 
 
+
+/********************************************************
+				HASH TABLE FUNCTIONS (ENCODE)
+*********************************************************/
+
+
 /* Return a newly created hash_table,
    initialized with every one character string */
 hash_table *
@@ -42,12 +48,23 @@ hashGetCode(entry *e);
 void
 hashPrintTable(hash_table *h, bool print_array);
 
-/**** Array specific functions ****/
+/********************************************************
+				ARRAY & ENTRY FUNCTIONS (DECODE)
+*********************************************************/
 
 // Return a pointer to the entry found the given code. 
 // If not in the code array, return NULL.
 entry * 
 hashCodeLookup(hash_table *h, int code);
+
+// Return the prefix code for a given table and code
+int 
+hashGetPrefix(hash_table *h, int code);
+
+// Return the final character for a given given table and code
+int 
+hashGetChar(hash_table *h, int code);
+
 
 void string_print(hash_table *h, int code);
 

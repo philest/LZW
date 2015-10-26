@@ -13,4 +13,18 @@
 
 #define EMPTYCODE (0)
 
+// Write message to stderr using format FORMAT
+#define WARN(format,...) fprintf (stderr, "Far: " format "\n", __VA_ARGS__)
 
+// Write message to stderr using format FORMAT and exit.
+#define DIE(format,...)  WARN(format,__VA_ARGS__), exit (EXIT_FAILURE)
+
+
+//an entry in the hash table 
+struct entry {
+	struct entry *next_entry; //pointer used for chaining
+	int prefix; //code for prefix
+	int final_char; // last character
+	int code; // this entry's code.
+	int times_used; // for pruning: the times accessed
+};

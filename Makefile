@@ -1,12 +1,13 @@
 CC=gcc
 CFLAGS= -std=c99 -g -Wall -pedantic
 
-all: lzw
+all: clean lzw
 	ln lzw encode
+	ln lzw decode
 clean: 
-	$(RM) lzw.o hash.o lzw encode decode
+	$(RM) lzw.o hash.o code.o stack.o lzw encode decode
 
-lzw: lzw.o hash.o
+lzw: lzw.o hash.o stack.o code1.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 lzw.o: lzw.c lzw.h hash.h
@@ -15,6 +16,11 @@ lzw.o: lzw.c lzw.h hash.h
 hash.o: hash.c hash.h
 	$(CC) $(CFLAGS) -c $<
 
+stack.o: stack.c stack.h
+	$(CC) $(CFLAGS) -c $<
+
+code1.o: code1.c code.h
+	$(CC) $(CFLAGS) -c code1.c
 
 
 
