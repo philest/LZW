@@ -40,6 +40,7 @@ hashGrow(hash_table *h);
 hash_table *
 hashInternalCreate(int size);
 
+void string_print(hash_table *h, int code);
 
 
 int 
@@ -282,6 +283,7 @@ hashGetCode(entry *e)
 
 
 
+
 void
 hashPrintTable(hash_table *h, bool print_array)
 {
@@ -297,8 +299,12 @@ hashPrintTable(hash_table *h, bool print_array)
 			for ( e = h->table[i]; e != 0; e = e->next_entry)
 				{	
 					if (!print_array)
-						printf("%8d | %5d | %8d | %s\n", 
-							e->prefix, e->final_char, e->code, "haven't done it");
+						{
+							printf("%8d | %5d | %8d | ", 
+								e->prefix, e->final_char, e->code);
+							string_print(h, e->code);
+							printf("\n");
+						}
 				
 					assert(0 <= e->prefix && e->prefix < 4096); //prefix is a valid code
 					assert(0 <= e->final_char && e->final_char < 256); //char is a valid char
@@ -309,8 +315,12 @@ hashPrintTable(hash_table *h, bool print_array)
 
 				//don't print zero-intialized values
 			if (print_array && (e->prefix != 0 || e->final_char != 0)) 
-				printf("%8d | %5d | %8d | %s\n", 
-					e->prefix, e->final_char, e->code, "haven't done it");
+				{
+					printf("%8d | %5d | %8d | ", 
+						e->prefix, e->final_char, e->code);
+					string_print(h, e->code);
+					printf("\n");
+				}
 
 			assert(0 <= e->prefix && e->prefix < 4096); //prefix is a valid code
 			assert(0 <= e->final_char && e->final_char < 256); //char is a valid char
@@ -319,6 +329,19 @@ hashPrintTable(hash_table *h, bool print_array)
 }
 
 
+void string_print(hash_table *h, int code)
+{
+		entry *e = hashCodeLookup(h, code);
+		
+		if (e->prefix != EMPTYCODE)
+			string_print(h, e->prefix);
+
+		if(e->final_char >= 32 && e->final_char <= 127)
+			printf("%c ", (char)e->final_char); //print the character
+		else
+			printf("%d ", e->final_char);
+
+}
 
 
 

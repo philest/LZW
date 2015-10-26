@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS= -std=c99 -g -Wall -pedantic
 
 all: lzw
-
+	ln lzw encode
 clean: 
 	$(RM) lzw.o hash.o lzw encode decode
 

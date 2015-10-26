@@ -6,6 +6,8 @@ Date	Time	Spent	Work completed
 ----	----	-----	--------------
 10/24	20:00	2:00	Read spec, start thinking of encode
 10/25	10:00	2:30	Implemented hash table
+10/25	20:00	2:30	Added stage 1 version of encode, hybrid array ds for decode
+	
 
 		TOTAL:	
 

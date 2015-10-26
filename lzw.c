@@ -14,6 +14,9 @@ hash_table * encode(void);
 
 void encode_test();
 
+//print the string associated with code
+void string_print(hash_table *h, int code);
+
 
 int
 main(int argc, const char* argv[])
@@ -55,6 +58,7 @@ hash_table *encode(void)
 	return table;
 
 }
+
 
 
 void test()

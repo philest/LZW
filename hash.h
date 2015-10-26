@@ -49,6 +49,7 @@ hashPrintTable(hash_table *h, bool print_array);
 entry * 
 hashCodeLookup(hash_table *h, int code);
 
+void string_print(hash_table *h, int code);
 
 
 
