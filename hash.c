@@ -2,8 +2,8 @@
 //Implementation guided by James Aspnes, CPSC 223 Notes
 // Phil Esterman 
 
-#include "hash.h"
 #include "lzw.h"
+#include "hash.h"
 
 #define SIZE (4096) //2^12, where 12 is the maxbits of a code
 
@@ -21,11 +21,10 @@ struct hash_table {
 	struct entry **table; //array of pointers to entries, for chaining
 	int n; /*number of elements stored*/
 	int size; //the current size of the table
+
+	struct entry *codeArray; //an array of the entries, indexed by code.  
 };
 
-
-/* 	TODO hashPrintTable 
-		 */
 
 
 //Hash function from Stan Eisenstat
@@ -58,15 +57,14 @@ hashInternalCreate(int size)
 	h = malloc(sizeof(hash_table));
 	h->n = 0; //no elts in table
 
-	//space for entry pointer
+	//space for every pointer
 	h->table = malloc(sizeof(struct entry *) * size);
+	for(i = 0; i < size; i++)
+		h->table[i] = 0; //set each index in table to empty
+
+	h->codeArray = calloc(size, sizeof(struct entry)); 
 
 	h->size = size; 
-
-	for(i = 0; i < size; i++)
-	{
-		h->table[i] = 0; //set each index in table to empty
-	}
 
 	return h;
 }
@@ -114,7 +112,26 @@ hashGrow(hash_table *h) {
 
 	hashDestroy(h2);
 
+	// grow the array
+	h->codeArray = realloc(h->codeArray, new_size);
+
 	return h; //new table
+}
+
+
+/*malloc space for a new entry, then return it.*/
+//NOTE: Does not set pointer to next
+entry *create_entry(int prefix, int final_char, int code, int times_used)
+{
+	struct entry *new_entry = malloc(sizeof(*new_entry));
+
+	new_entry->prefix = prefix;
+	new_entry->final_char = final_char;
+	new_entry->code = code;
+	new_entry->times_used = times_used; //initialized to never used NOTE: Change
+	new_entry->next_entry = 0;
+
+	return new_entry; 
 }
 
 
@@ -123,6 +140,7 @@ hashInsert(hash_table *h, int prefix, int final_char, int code) {
 
 	int hash_key; 
 	struct entry *e;
+	struct entry *e_for_array;
 
 	//table full
 	if (h->n >= h->size)
@@ -133,14 +151,7 @@ hashInsert(hash_table *h, int prefix, int final_char, int code) {
 
 	// if(h->n >= h->size) 
 	// 	h = hashGrow(h);
-
-	e = malloc(sizeof(struct entry)); // the new pair
-
-	//initialize the entry pair
-	e->prefix = prefix;
-	e->final_char = final_char;
-	e->code = code;
-	e->times_used = 666; //NOTE CHANGE THIS
+	e = create_entry(prefix, final_char, code, 0);
 
 	hash_key = hashFunction(prefix, final_char);
 
@@ -148,13 +159,22 @@ hashInsert(hash_table *h, int prefix, int final_char, int code) {
 	e->next_entry = h->table[hash_key];
 	h->table[hash_key] = e;
 
+	// insert in code array
+	e_for_array = create_entry(prefix, final_char, code, 0);
+	h->codeArray[h->n] = *e_for_array;
+
+	free(e_for_array);
+
 	h->n++; //one more entry in table
+	assert(hashLookup(h, prefix, final_char)); //ensure in table
+	assert(hashCodeLookup(h, h->n - 1)); //ensure in array
+
 
 	return 1; //success
 }
 
 
-
+// NOTE: Doesn't delete from array
 int 
 hashDelete(hash_table *h, int prefix, int final_char) {
 
@@ -188,6 +208,16 @@ hashDelete(hash_table *h, int prefix, int final_char) {
 
 		return 0; /*error: not found*/
 
+}
+
+
+// Return a pointer to the entry found the given code. 
+// If not in the code array, return NULL.
+entry * 
+hashCodeLookup(hash_table *h, int code) {	
+
+	assert(code < h->n);
+	return &(h->codeArray[code]);
 }
 
 
@@ -229,8 +259,13 @@ hashDestroy(hash_table *h) {
 	}
 
 	free(h->table);
+	free(h->codeArray);
+
 	free(h);
 }
+
+
+
 
 
 int
@@ -239,9 +274,16 @@ hashGetN(hash_table *h) {
 	return h->n;
 }
 
+int
+hashGetCode(entry *e)
+{
+	return e->code;
+}
+
+
 
 void
-hashPrintTable(hash_table *h)
+hashPrintTable(hash_table *h, bool print_array)
 {
 
 	int i;
@@ -251,11 +293,31 @@ hashPrintTable(hash_table *h)
     printf("--------   ------  -------   ------\n");
 
 	for(i = 0; i < h->size; i++)
-		for ( e = h->table[i]; e != 0; e = e->next_entry)
-			printf("%8d | %5d | %8d | %s\n", 
-				e->prefix, e->final_char, e->code, "haven't done it");
+		{
+			for ( e = h->table[i]; e != 0; e = e->next_entry)
+				{	
+					if (!print_array)
+						printf("%8d | %5d | %8d | %s\n", 
+							e->prefix, e->final_char, e->code, "haven't done it");
+				
+					assert(0 <= e->prefix && e->prefix < 4096); //prefix is a valid code
+					assert(0 <= e->final_char && e->final_char < 256); //char is a valid char
+				}
+
+			// make sure code_array is proper
+			e = &(h->codeArray[i]);	
+
+				//don't print zero-intialized values
+			if (print_array && (e->prefix != 0 || e->final_char != 0)) 
+				printf("%8d | %5d | %8d | %s\n", 
+					e->prefix, e->final_char, e->code, "haven't done it");
+
+			assert(0 <= e->prefix && e->prefix < 4096); //prefix is a valid code
+			assert(0 <= e->final_char && e->final_char < 256); //char is a valid char
+		}
 
 }
+
 
 
 

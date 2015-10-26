@@ -11,3 +11,5 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <assert.h>
+
+#define EMPTYCODE (0)

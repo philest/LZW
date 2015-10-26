@@ -1,5 +1,7 @@
+// hash.h -- Interface for hash table implementation of string table
+// Phil Esterman 
+#include <stdbool.h>
 
-#define EMPTYCODE (0)
 
 typedef struct hash_table hash_table;
 typedef struct entry entry; 
@@ -32,10 +34,21 @@ hashDestroy(hash_table *h);
 int
 hashGetN(hash_table *h); 
 
+/* return the code of the given entry */
+int
+hashGetCode(entry *e); 
 
 /* Print all entries within the hash table */
 void
-hashPrintTable(hash_table *h);
+hashPrintTable(hash_table *h, bool print_array);
+
+/**** Array specific functions ****/
+
+// Return a pointer to the entry found the given code. 
+// If not in the code array, return NULL.
+entry * 
+hashCodeLookup(hash_table *h, int code);
+
 
 
 
