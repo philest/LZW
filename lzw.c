@@ -45,7 +45,7 @@ main(int argc, const char* argv[])
 
 void encode(void)
 {
-	hash_table *table = hashCreate();
+	hash_table *table = hashCreate(POW_OF_2(DEFAULT_MAX_BITS));
 
 	int k; //char just read
 	int code = EMPTYCODE; //code to prefix, or code of newly inserted
@@ -57,9 +57,9 @@ void encode(void)
 		else
 		{	
 			//put it in table
-			printf("%d\n", code);
-			// putBits(12, code);
-			hashInsert(table, code, k, hashGetN(table));
+			//printf("%d\n", code);
+			putBits(hashGetNumBits(table), code);
+			hashInsert(table, code, k, hashGetN(table), 0);
 			
 			//then get the code
 			ent = hashLookup(table, EMPTYCODE, k);
@@ -67,7 +67,7 @@ void encode(void)
 		}
 	}
 
-	if (code != EMPTYCODE) printf("%d\n", code); //putBits(12, code);
+	if (code != EMPTYCODE) putBits(hashGetNumBits(table), code);
 
 	// hashPrintTable(table, true);
 
@@ -80,16 +80,19 @@ void encode(void)
 
 void decode()
 {	
-	#define TEST (1)
 
 	int oldCode = EMPTYCODE, newCode, code, final_char = 666; 
 
-	hash_table *table = hashCreate();
-	Stack kstack = stackCreate(4096); 
+	hash_table *table = hashCreate(POW_OF_2(DEFAULT_MAX_BITS));
+	Stack kstack = stackCreate(POW_OF_2(DEFAULT_MAX_BITS)); 
 
+	int numBits = 8;
 			//read the next code in input
-	while( (newCode = code = mygetBits()) != EOF)
+	while( (newCode = code = getBits(numBits)) != EOF)
 	{
+
+		//#define TEST (1)
+
 		#ifdef TEST
 			printf("Current code: %d\n", code);
 		#endif
@@ -118,46 +121,57 @@ void decode()
 
 
 		final_char = hashGetChar(table, e->code);
-		//putchar(final_char)
-		printf("%d, ascii: %c\n", final_char, (char)final_char); 
+		putchar(final_char);
+
+
+		// #ifdef TEST
+		// 	printf("%d, ascii: %c\n", final_char, (char)final_char); 
+		// #else
+		// 	if( (final_char >= 32 && final_char <= 127) || (final_char == 10 || final_char==9) )
+		// 		printf("%c", (char)final_char); //print the character
+		// 	else
+		// 		printf("%d", final_char);
+		// #endif
 
 		while(!stackEmpty(kstack))
 		{
 			int k = stackPop(kstack); 
-			//putchar(k);
-			printf("%d, ascii: %c\n", k, (char)k); 
-
+			putchar(k);
+			// #ifdef TEST
+			// 	printf("%d, ascii: %c\n", k, (char)k); 
+			// #else
+			// 	if( (k >= 32 && k <= 127) || (k== 10 || k==9))
+			// 		printf("%c", (char)k); //print the character
+			// 	else
+			// 		printf("%d", k);
+			// #endif
 		}
 
 		if (oldCode != EMPTYCODE)
-			hashInsert(table, oldCode, final_char, hashGetN(table));
+			hashInsert(table, oldCode, final_char, hashGetN(table), 0);
 		
 		oldCode = newCode;
+		numBits = decodeHashGetNumBits(table);
+
 	}
 
-	hashPrintTable(table, true);
+	// hashPrintTable(table, true);
 
 }
 
 
-int mygetBits(void)
-{
-	int code; 
+// int mygetBits(void)
+// {
+// 	int code; 
 
-	if (scanf ("%d\n", &code) < 1)              // Demand code or assume no more
-		return EOF;
-	else
-		return code;
-}
+// 	if (scanf ("%d\n", &code) < 1)              // Demand code or assume no more
+// 		return EOF;
+// 	else
+// 		return code;
+// }
 
 void test()
 {
-	int code;
-
-	while((code = mygetBits()) != EOF)
-	{	
-		printf("%d\n", code);		
-	}
 
 }
 

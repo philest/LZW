@@ -13,6 +13,9 @@
 
 #define EMPTYCODE (0)
 
+#define DEFAULT_MAX_BITS (12)
+#define POW_OF_2(exp) (1 << exp)
+
 // Write message to stderr using format FORMAT
 #define WARN(format,...) fprintf (stderr, "Far: " format "\n", __VA_ARGS__)
 

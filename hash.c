@@ -5,8 +5,6 @@
 #include "lzw.h"
 #include "hash.h"
 
-#define SIZE (4096) //2^12, where 12 is the maxbits of a code
-
 
 // //an entry in the hash table 
 // struct entry {
@@ -30,11 +28,11 @@ struct hash_table {
 //Hash function from Stan Eisenstat
 /*returns a unique hashed value for prefix, char pair */
 int
-hashFunction(int p, int k);
+hashFunction(hash_table *h, int p, int k);
 
-/* Grow the hashtable by a multiple of 2*/
+// Grow the hash table to the new size
 hash_table *
-hashGrow(hash_table *h);
+hashGrow(hash_table *h, int new_size);
 
 /* Return a newly created hash_table of the given size*/
 hash_table *
@@ -44,8 +42,8 @@ void string_print(hash_table *h, int code);
 
 
 int 
-hashFunction(int p, int k) {
-	return (((unsigned)(p) << CHAR_BIT) ^ ((unsigned) (k))) % SIZE;
+hashFunction(hash_table *h, int p, int k) {
+	return (((unsigned)(p) << CHAR_BIT) ^ ((unsigned) (k))) % h->size;
 } 
 
 
@@ -71,14 +69,14 @@ hashInternalCreate(int size)
 }
 
 hash_table *
-hashCreate(void) {
+hashCreate(int size) {
 
-	hash_table *h = hashInternalCreate(SIZE);
+	hash_table *h = hashInternalCreate(size);
 
 	// initialize with each one character string 
 	int i;
 	for (i = 0; i < 256; i++)
-		hashInsert(h, EMPTYCODE, i, h->n); // 0 times used
+		hashInsert(h, EMPTYCODE, i, h->n, 0); // 0 times used
 
 	return h;
 }
@@ -86,14 +84,12 @@ hashCreate(void) {
 
 //NOTE: DOES NOT TRANSFER TIMES_USED
 hash_table *
-hashGrow(hash_table *h) {
+hashGrow(hash_table *h, int new_size) {
 
 	hash_table *h2; // new table to create
 	hash_table swap; // container for destroying old table
 	struct entry *e; // iterator for entries
 	int i;
-
-	int new_size = h->size * 2; //double the size
 
 	h2 = hashInternalCreate(new_size);
 
@@ -102,7 +98,7 @@ hashGrow(hash_table *h) {
 		for(e = h->table[i]; e != 0; e = e->next_entry) //traverse chain
 		{
 			/*insert old entrys into new hash_table*/
-			hashInsert(h2, e->prefix, e->final_char, e->code); //TODO insert times
+			hashInsert(h2, e->prefix, e->final_char, e->code, e->times_used); //TODO insert times
 		}
 	}
 
@@ -119,12 +115,37 @@ hashGrow(hash_table *h) {
 	return h; //new table
 }
 
+int
+hashGetNumBits(hash_table *h)
+{
+	int expon = 1;
+
+	//grow exponent until it can a bitfield of that length
+	//can represent that number of codes
+	while (POW_OF_2(expon) < h->n)
+		expon++;  
+
+	return expon;
+}
+
+int
+decodeHashGetNumBits(hash_table *h)
+{
+	int expon = 1;
+
+	//grow exponent until it can a bitfield of that length
+	//can represent that number of codes
+	while (POW_OF_2(expon) <= h->n)
+		expon++;  
+
+	return expon;
+}
 
 /*malloc space for a new entry, then return it.*/
 //NOTE: Does not set pointer to next
 entry *create_entry(int prefix, int final_char, int code, int times_used)
 {
-	struct entry *new_entry = malloc(sizeof(*new_entry));
+	struct entry *new_entry = calloc(1, sizeof(*new_entry));
 
 	new_entry->prefix = prefix;
 	new_entry->final_char = final_char;
@@ -137,34 +158,38 @@ entry *create_entry(int prefix, int final_char, int code, int times_used)
 
 
 int
-hashInsert(hash_table *h, int prefix, int final_char, int code) {
+hashInsert(hash_table *h, int prefix, int final_char, int code, int times_used) {
 
 	int hash_key; 
 	struct entry *e;
 	struct entry *e_for_array;
 
 	//table full
-	if (h->n >= h->size)
-	{
-		printf("%s", "Hash Table is full!");
-		return 0; // failure
-	}
+	// if (h->n >= h->size)
+	// 	h = hashGrow(h, POW_OF_2((hashGetNumBits(h) + 1)) );
+										//need one more: still need to add.
+	assert(h->n <= h->size);
+	// if (h->n >= h->size)
+	// {
+	// 	printf("%s", "Hash Table is full!");
+	// 	return 0; // failure
+	// }
 
 	// if(h->n >= h->size) 
 	// 	h = hashGrow(h);
-	e = create_entry(prefix, final_char, code, 0);
+	e = create_entry(prefix, final_char, code, times_used);
 
-	hash_key = hashFunction(prefix, final_char);
+	hash_key = hashFunction(h, prefix, final_char);
 
 	// chaining: insert element at front of that index's chain
 	e->next_entry = h->table[hash_key];
 	h->table[hash_key] = e;
 
 	// insert in code array
-	e_for_array = create_entry(prefix, final_char, code, 0);
+	e_for_array = create_entry(prefix, final_char, code, times_used);
 	h->codeArray[h->n] = *e_for_array;
 
-	free(e_for_array);
+	// free(e_for_array);
 
 	h->n++; //one more entry in table
 	assert(hashLookup(h, prefix, final_char)); //ensure in table
@@ -179,7 +204,7 @@ hashInsert(hash_table *h, int prefix, int final_char, int code) {
 int 
 hashDelete(hash_table *h, int prefix, int final_char) {
 
-	int hash_key = hashFunction(prefix,final_char);
+	int hash_key = hashFunction(h, prefix,final_char);
 	struct entry* e; // entry to delete
 	struct entry* prev; // for patching up chain
 
@@ -233,7 +258,7 @@ hashCodeLookup(hash_table *h, int code) {
 entry * 
 hashLookup(hash_table *h, int prefix, int final_char) {
 
-	int hash_key = hashFunction(prefix, final_char);
+	int hash_key = hashFunction(h, prefix, final_char);
 	struct entry *e; // entry iterator
 
 	for(e = h->table[hash_key]; e != 0; e = e->next_entry)
@@ -263,6 +288,9 @@ hashDestroy(hash_table *h) {
 			next = e->next_entry;
 			free(e);
 		}
+
+		// if(i < h->n) free(&(h->codeArray[i]));
+
 	}
 
 	free(h->table);

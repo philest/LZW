@@ -4,7 +4,7 @@
 
 
 #include <stdio.h>
-#include "/c/cs323/Hwk4/code.h"
+#include "code.h"
 
 
 // Write code (#bits = nBits) to standard output

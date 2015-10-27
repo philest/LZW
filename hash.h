@@ -15,12 +15,12 @@ typedef struct entry entry;
 /* Return a newly created hash_table,
    initialized with every one character string */
 hash_table *
-hashCreate(void); 
+hashCreate(int size); 
 
 /* Insert pair (prefix, char) into the table.
    Return 0 on failure, 1 on success. */
 int
-hashInsert(hash_table *h, int prefix, int final_char, int code);
+hashInsert(hash_table *h, int prefix, int final_char, int code, int times_used);
 
 /* Remove the first entry with (prefix, final_char) pair from
    the hash table. Return 1 if success, 0 if not in hash_table  */
@@ -48,6 +48,8 @@ hashGetCode(entry *e);
 void
 hashPrintTable(hash_table *h, bool print_array);
 
+
+
 /********************************************************
 				ARRAY & ENTRY FUNCTIONS (DECODE)
 *********************************************************/
@@ -66,7 +68,24 @@ int
 hashGetChar(hash_table *h, int code);
 
 
+/********************************************************
+				MISC
+*********************************************************/
+
+//Return the #bits needed to represent all codes in table
+int
+hashGetNumBits(hash_table *h);
+
+//Return the #bits needed to represent all codes in table
+//for decode!
+int
+decodeHashGetNumBits(hash_table *h);
+
+
 void string_print(hash_table *h, int code);
+
+
+
 
 
 
