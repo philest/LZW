@@ -119,8 +119,10 @@ void encode(int max_bits)
 		else //new code!
 		{	
 			//write the prefix 
+			#ifndef COMPARE_TABLES
 			putBits(hashGetNumBits(table), code);
-			
+			#endif
+
 			//if room: put the new prefix, char pair in table
 			if (!hashFull(table))
 				hashInsert(table, code, k, hashGetN(table), 0);
@@ -134,8 +136,11 @@ void encode(int max_bits)
 	}
 
 	if (code != EMPTYCODE) putBits(hashGetNumBits(table), code);
+	flushBits();
 
-	// hashPrintTable(table, true);
+	#ifdef COMPARE_TABLES
+	hashPrintTable(table, true);
+	#endif
 
 }
 
@@ -146,6 +151,8 @@ void encode(int max_bits)
 
 void decode()
 {	
+	int currByte = 1;
+	FILE *cmp_file = fopen("docs/sylvie.1", "r");
 
 	int oldCode = EMPTYCODE, newCode, code, final_char;
 	int max_bits, status; 
@@ -162,14 +169,16 @@ void decode()
 
 			//read the next code in input
 	while( (newCode = code = getBits(numBits)) != EOF)
-	{
+	{	
+
 
 		assert(numBits <= max_bits);
 
-		// #define TEST (1)
+		//#define TEST (1)
+		//#define DEBUG (1)
 
 		#ifdef TEST
-			printf("Current code: %d\n", code);
+			printf("Byte: %d, Current code: %d\n", currByte, code);
 		#endif
 
 		entry *e;
@@ -196,13 +205,36 @@ void decode()
 		} 
 
 		final_char = hashGetChar(table, e->code); //get the first char!
+		
+		#ifdef DEBUG
+			int real_char = (int)fgetc(cmp_file);
+			if (real_char != final_char)
+				DIE("sylvie.1 ERROR: In byte %d: actual file had: %d (ascii: %c)\ndecode gave: %d (ascii: %c)",
+									currByte, real_char, (char)real_char, final_char, (char)final_char);
+			//currByte++;
+		#endif
+			currByte++;
+
+		#ifndef COMPARE_TABLES
 		putchar(final_char);
+		#endif
 
 
 		while(!stackEmpty(kstack)) //write the string just read
 		{						   //from prefix-dive
 			int k = stackPop(kstack); 
+			#ifdef DEBUG
+				int real_char = (int)fgetc(cmp_file);
+				if (real_char != k)
+					DIE("ERROR: In byte %d: actual file had: %d (ascii: %c)\ndecode gave: %d (ascii: %c)",
+										currByte, real_char, (char)real_char, k, (char)k);
+				//currByte++;
+			#endif
+				currByte++;
+		
+			#ifndef COMPARE_TABLES
 			putchar(k);
+			#endif
 		}
 
 								              //insert the prefix (oldCode), 
@@ -212,7 +244,35 @@ void decode()
 		oldCode = newCode;
 		numBits = decodeHashGetNumBits(table);
 
+
+		// if (currByte == 386081)
+		// {
+		// 	int jew;
+		// 	jew = 55;
+		// }
+
+
 	}
+
+	#ifdef COMPARE_TABLES
+	hashPrintTable(table, true);
+	#endif
+
+	#ifdef TEST
+	printf("end Byte: %d\n", currByte-1);
+	#endif 
+
+	// #ifdef DEBUG
+	// 	flushBits();
+
+	// 	int c;
+	// 	while((c = (int)fgetc(cmp_file)) != EOF)
+	// 	{
+	// 		printf("Real sylvie file still had: byte %d, (ascii %c)\n", c, (char)c);
+	// 	}
+	// #endif
+
+	
 
 }
 

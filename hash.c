@@ -246,7 +246,7 @@ hashDelete(hash_table *h, int prefix, int final_char) {
 entry * 
 hashCodeLookup(hash_table *h, int code) {	
 
-	assert(code < 4096); //valid codes
+	assert(code < h->size); //valid codes
 
 	if (code < h->n) return &(h->codeArray[code]);
 	else return NULL; // not
@@ -349,7 +349,7 @@ hashPrintTable(hash_table *h, bool print_array)
 							printf("\n");
 						}
 				
-					assert(0 <= e->prefix && e->prefix < 4096); //prefix is a valid code
+					assert(0 <= e->prefix && e->prefix < h->size); //prefix is a valid code
 					assert(0 <= e->final_char && e->final_char < 256); //char is a valid char
 				}
 
@@ -365,7 +365,7 @@ hashPrintTable(hash_table *h, bool print_array)
 					printf("\n");
 				}
 
-			assert(0 <= e->prefix && e->prefix < 4096); //prefix is a valid code
+			assert(0 <= e->prefix && e->prefix < h->size); //prefix is a valid code
 			assert(0 <= e->final_char && e->final_char < 256); //char is a valid char
 		}
 

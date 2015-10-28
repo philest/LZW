@@ -5,7 +5,7 @@ all: clean lzw
 	ln lzw encode
 	ln lzw decode
 clean: 
-	$(RM) lzw.o hash.o code2.o code1.o code.o stack.o lzw encode decode
+	$(RM) lzw.o hash.o code.o code1.o code.o stack.o lzw encode decode
 
 lzw: lzw.o hash.o stack.o code.o
 	$(CC) $(CFLAGS) -o $@ $^

@@ -11,7 +11,8 @@ Date	Time	Spent	Work completed
 10/26	10:30	1:30	Implementing the stack. 
 10/26	14:30	2:00	Implementing, debugging decode for stage 1.
 10/26	20:00	2:00	Implementing stage 2.
-10/27	18:00	2:00	Debugging valgrind errors w/ hash table growth. 
+10/27	18:00	2:00	Debugging valgrind errors w/ hash table growth.
+10/27	20:00	1:00	Basic arg-parsing, implemented max-bits. 
 
 
 		TOTAL:	
