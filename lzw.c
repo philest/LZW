@@ -52,6 +52,9 @@ void encode(int max_bits)
 	int code = EMPTYCODE; //code to prefix, or code of newly inserted
 	entry *ent; 
 
+	//signal the max bits
+	printf("%d", max_bits);
+
 	while((k = getchar()) != EOF) {
 		if ((ent = hashLookup(table, code, k)) != NULL) //it's in table
 			code = hashGetCode(ent); //it's in table, so get code
@@ -86,14 +89,19 @@ void encode(int max_bits)
 
 void decode()
 {	
-	int max_bits = DEFAULT_MAX_BITS; //temp
 
-	int oldCode = EMPTYCODE, newCode, code, final_char; 
+	int oldCode = EMPTYCODE, newCode, code, final_char;
+	int max_bits, status; 
+
+	int numBits = 8; // table full of 256 default one char codes
 
 	hash_table *table = hashCreate(POW_OF_2(DEFAULT_MAX_BITS));
 	Stack kstack = stackCreate(POW_OF_2(DEFAULT_MAX_BITS)); 
 
-	int numBits = 8; // table full of 256 default one char codes
+	//read max bits signal!
+	status = scanf("%d", &max_bits);
+	if (status < 1)
+		DIE("%s", "scanf of max_bits failed");
 
 			//read the next code in input
 	while( (newCode = code = getBits(numBits)) != EOF)
@@ -148,8 +156,6 @@ void decode()
 		numBits = decodeHashGetNumBits(table);
 
 	}
-
-	// hashPrintTable(table, true);
 
 }
 

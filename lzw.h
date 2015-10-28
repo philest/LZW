@@ -13,7 +13,7 @@
 
 #define EMPTYCODE (0)
 
-#define DEFAULT_MAX_BITS (8)
+#define DEFAULT_MAX_BITS (12)
 #define POW_OF_2(exp) (1 << exp)
 
 // Write message to stderr using format FORMAT
