@@ -8,6 +8,8 @@
 
 #define LZW (1) // for stack.h modules
 
+#define DONT_PRUNE (-1)
+
 //return TRUE if same string, FALSE otherwise
 // #define my_strcmp(str1, str2) (strcmp(str1,str2) == 0)
 
@@ -21,11 +23,65 @@ void encode_test();
 
 int getPrefix(hash_table *h, int code);
 
+// Return the proper argument values in an array, 
+// given the CL arguments args, 
+// void readArgs(const char *argv[], int arg_vals[]);
+
 int
 main(int argc, const char* argv[])
 {		
 
-	int max_bits = DEFAULT_MAX_BITS;
+	//set default args!
+	int max_bits = DEFAULT_MAX_BITS; //-m arg
+	char input_file[PATH_MAX] = "none"; //-i arg 
+	char output_file[PATH_MAX] = "none"; //-o arg
+	int prune = DONT_PRUNE; //-p arg
+
+	/***** READ ARGS ******/
+
+	for(int i = 1; i < argc; i++)
+	{
+			//it's the last arg, and a flag. 
+		if 	((i + 1 == argc) &&
+			(strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "-i") == 0 
+				|| strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "-p") == 0))
+				DIE("%s", "improper arg format!: ending with flag!");
+
+
+		if (strcmp(argv[i], "-m") == 0)
+		{
+			
+			max_bits = atoi(argv[i+1]);
+
+			if(strcmp(argv[i+1], "0") != 0 && max_bits == 0)
+				DIE("%s", "improper -m format: must be integer!");
+
+			if (max_bits <= 8 || max_bits > 20)
+				max_bits = DEFAULT_MAX_BITS;
+		}
+
+		else if (strcmp(argv[i], "-i") == 0)
+		{
+			strcpy(input_file, argv[i+1]);
+		}
+		else if (strcmp(argv[i], "-o") == 0)
+		{
+			strcpy(output_file, argv[i+1]);
+		}
+		else if (strcmp(argv[i], "-p") == 0)
+		{
+			prune = atoi(argv[i+1]);
+
+			if(strcmp(argv[i+1], "0") != 0 && prune == 0)
+				DIE("%s", "improper -p format: must be integer!");
+		}	
+			// anything not preceded by a flag!  
+		else if ((i == 1 ) || !(strcmp(argv[i - 1], "-m") == 0 || strcmp(argv[i - 1], "-i") == 0 
+				|| strcmp(argv[i - 1], "-o") == 0 || strcmp(argv[i - 1], "-p") == 0))
+			DIE("%s", "Invalid argument! Not preceded by flag");
+
+	}
+
 
 		//check whether called by encode (last six characters)
 	if (strcmp((*argv+(strlen(argv[0]) - 6)), "encode") == 0)
@@ -35,6 +91,7 @@ main(int argc, const char* argv[])
 	else
 		test();
 		//DIE("%s", "Must call by encode or decode");
+
 }
 
 
