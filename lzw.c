@@ -86,7 +86,7 @@ void encode(int max_bits)
 
 void decode()
 {	
-	int max_bits; 
+	int max_bits = DEFAULT_MAX_BITS; //temp
 
 	int oldCode = EMPTYCODE, newCode, code, final_char; 
 
@@ -99,7 +99,9 @@ void decode()
 	while( (newCode = code = getBits(numBits)) != EOF)
 	{
 
-		//#define TEST (1)
+		assert(numBits <= max_bits);
+
+		// #define TEST (1)
 
 		#ifdef TEST
 			printf("Current code: %d\n", code);
@@ -110,34 +112,36 @@ void decode()
 			// unknown code found!
 		if ((e = hashCodeLookup(table, code)) == NULL)
 		{
-			stackPush(kstack, final_char);
-			code = oldCode;
+			stackPush(kstack, final_char); //add the last char to stack
+			code = oldCode; //output the string rep'd by prefix code
 		}
 
-		e = hashCodeLookup(table, code);
+		e = hashCodeLookup(table, code); //find pair in table
 		if(e == NULL)
-			 DIE("%s", "An unknown code-- and not kwkwk case-- was found\n");
+		{
+			DIE("%s", "An unknown code-- and not kwkwk case-- was found\n");
+		}
 
 		   //until the prefix is empty, accumulate chars
 		while (e->prefix != EMPTYCODE)
 		{
 			stackPush(kstack, e->final_char);
-			e = hashCodeLookup(table, e->prefix);
+			e = hashCodeLookup(table, e->prefix); 
+					// dive into prefix codes
 		} 
 
-
-		final_char = hashGetChar(table, e->code);
+		final_char = hashGetChar(table, e->code); //get the first char!
 		putchar(final_char);
 
 
-
-		while(!stackEmpty(kstack))
-		{
+		while(!stackEmpty(kstack)) //write the string just read
+		{						   //from prefix-dive
 			int k = stackPop(kstack); 
 			putchar(k);
 		}
 
-		if (oldCode != EMPTYCODE)
+								              //insert the prefix (oldCode), 
+		if (oldCode != EMPTYCODE && !hashFull(table))             //char (final_char) pair in table
 			hashInsert(table, oldCode, final_char, hashGetN(table), 0);
 		
 		oldCode = newCode;

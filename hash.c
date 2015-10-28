@@ -131,12 +131,16 @@ hashGetNumBits(hash_table *h)
 int
 decodeHashGetNumBits(hash_table *h)
 {
-	int expon = 1;
+	int expon = 1;	
 
 	//grow exponent until it can a bitfield of that length
 	//can represent that number of codes
 	while (POW_OF_2(expon) <= h->n)
 		expon++;  
+
+	if (hashFull(h)) //when full, don't need
+		expon--;	//to preemptively add a bit:
+					//no more codes are coming.
 
 	return expon;
 }
