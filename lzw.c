@@ -21,8 +21,6 @@ void encode_test();
 
 int getPrefix(hash_table *h, int code);
 
-int mygetBits(void);
-
 int
 main(int argc, const char* argv[])
 {		
@@ -86,7 +84,8 @@ void decode()
 	hash_table *table = hashCreate(POW_OF_2(DEFAULT_MAX_BITS));
 	Stack kstack = stackCreate(POW_OF_2(DEFAULT_MAX_BITS)); 
 
-	int numBits = 8;
+	int numBits = 8; // table full of 256 default one char codes
+
 			//read the next code in input
 	while( (newCode = code = getBits(numBits)) != EOF)
 	{
@@ -110,8 +109,6 @@ void decode()
 		if(e == NULL)
 			 DIE("%s", "And unknown code-- and not kwkwk case-- was found\n");
 
-		
-
 		   //until the prefix is empty, accumulate chars
 		while (e->prefix != EMPTYCODE)
 		{
@@ -124,27 +121,11 @@ void decode()
 		putchar(final_char);
 
 
-		// #ifdef TEST
-		// 	printf("%d, ascii: %c\n", final_char, (char)final_char); 
-		// #else
-		// 	if( (final_char >= 32 && final_char <= 127) || (final_char == 10 || final_char==9) )
-		// 		printf("%c", (char)final_char); //print the character
-		// 	else
-		// 		printf("%d", final_char);
-		// #endif
 
 		while(!stackEmpty(kstack))
 		{
 			int k = stackPop(kstack); 
 			putchar(k);
-			// #ifdef TEST
-			// 	printf("%d, ascii: %c\n", k, (char)k); 
-			// #else
-			// 	if( (k >= 32 && k <= 127) || (k== 10 || k==9))
-			// 		printf("%c", (char)k); //print the character
-			// 	else
-			// 		printf("%d", k);
-			// #endif
 		}
 
 		if (oldCode != EMPTYCODE)
@@ -160,15 +141,7 @@ void decode()
 }
 
 
-// int mygetBits(void)
-// {
-// 	int code; 
 
-// 	if (scanf ("%d\n", &code) < 1)              // Demand code or assume no more
-// 		return EOF;
-// 	else
-// 		return code;
-// }
 
 void test()
 {

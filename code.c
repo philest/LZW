@@ -4,7 +4,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "/c/cs323/Hwk4/code.h"
+// #include "/c/cs323/Hwk4/code.h"
+#include "code.h"
 
 // Information shared by putBits() and flushBits()
 static int nExtra = 0;                  // #bits from previous byte(s)
