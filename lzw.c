@@ -13,7 +13,7 @@
 
 void test(void);
 
-void encode(void);
+void encode(int max_bits);
 
 void decode(void);
 
@@ -24,9 +24,12 @@ int getPrefix(hash_table *h, int code);
 int
 main(int argc, const char* argv[])
 {		
+
+	int max_bits = DEFAULT_MAX_BITS;
+
 		//check whether called by encode (last six characters)
 	if (strcmp((*argv+(strlen(argv[0]) - 6)), "encode") == 0)
-		encode();
+		encode(max_bits);
 	else if (strcmp((*argv+(strlen(argv[0]) - 6)), "decode") == 0)
 		decode();
 	else
@@ -41,28 +44,33 @@ main(int argc, const char* argv[])
 *********************************************************/
 
 
-void encode(void)
+void encode(int max_bits)
 {
-	hash_table *table = hashCreate(POW_OF_2(DEFAULT_MAX_BITS));
+	hash_table *table = hashCreate(POW_OF_2(max_bits));
 
 	int k; //char just read
 	int code = EMPTYCODE; //code to prefix, or code of newly inserted
 	entry *ent; 
 
 	while((k = getchar()) != EOF) {
-		if ((ent = hashLookup(table, code, k)))
+		if ((ent = hashLookup(table, code, k)) != NULL) //it's in table
 			code = hashGetCode(ent); //it's in table, so get code
-		else
+		
+		else //new code!
 		{	
-			//put it in table
-			//printf("%d\n", code);
+			//write the prefix 
 			putBits(hashGetNumBits(table), code);
-			hashInsert(table, code, k, hashGetN(table), 0);
 			
-			//then get the code
+			//if room: put the new prefix, char pair in table
+			if (!hashFull(table))
+				hashInsert(table, code, k, hashGetN(table), 0);
+			
+			//make that final character the new prefix code
 			ent = hashLookup(table, EMPTYCODE, k);
 			code = hashGetCode(ent);
 		}
+
+
 	}
 
 	if (code != EMPTYCODE) putBits(hashGetNumBits(table), code);
@@ -78,8 +86,9 @@ void encode(void)
 
 void decode()
 {	
+	int max_bits; 
 
-	int oldCode = EMPTYCODE, newCode, code, final_char = 666; 
+	int oldCode = EMPTYCODE, newCode, code, final_char; 
 
 	hash_table *table = hashCreate(POW_OF_2(DEFAULT_MAX_BITS));
 	Stack kstack = stackCreate(POW_OF_2(DEFAULT_MAX_BITS)); 
@@ -107,7 +116,7 @@ void decode()
 
 		e = hashCodeLookup(table, code);
 		if(e == NULL)
-			 DIE("%s", "And unknown code-- and not kwkwk case-- was found\n");
+			 DIE("%s", "An unknown code-- and not kwkwk case-- was found\n");
 
 		   //until the prefix is empty, accumulate chars
 		while (e->prefix != EMPTYCODE)

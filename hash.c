@@ -272,6 +272,11 @@ hashLookup(hash_table *h, int prefix, int final_char) {
 	return NULL;
 }
 
+bool
+hashFull(hash_table *h) {
+
+	return h->n >= h->size; 
+}
 
 
 void

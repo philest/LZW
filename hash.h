@@ -48,6 +48,9 @@ hashGetCode(entry *e);
 void
 hashPrintTable(hash_table *h, bool print_array);
 
+// Return true if table is full, false if not full
+bool
+hashFull(hash_table *h);
 
 
 /********************************************************
