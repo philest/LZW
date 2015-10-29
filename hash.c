@@ -76,7 +76,7 @@ hashCreate(int size) {
 	// initialize with each one character string 
 	int i;
 	for (i = 0; i < 256; i++)
-		hashInsert(h, EMPTYCODE, i, h->n, 0); // 0 times used
+		hashInsert(h, EMPTYCODE, i, h->n + 1, 0); // 0 times used
 
 	return h;
 }
@@ -164,6 +164,9 @@ entry *create_entry(int prefix, int final_char, int code, int times_used)
 int
 hashInsert(hash_table *h, int prefix, int final_char, int code, int times_used) {
 
+	assert(code != EMPTYCODE);
+	assert(code <= h->size);
+
 	int hash_key; 
 	struct entry *e;
 	struct entry *e_for_array;
@@ -197,7 +200,7 @@ hashInsert(hash_table *h, int prefix, int final_char, int code, int times_used) 
 
 	h->n++; //one more entry in table
 	assert(hashLookup(h, prefix, final_char)); //ensure in table
-	assert(hashCodeLookup(h, h->n - 1)); //ensure in array
+	assert(hashCodeLookup(h, code)); //ensure in array //skip zeroth index!
 
 
 	return 1; //success
@@ -246,9 +249,10 @@ hashDelete(hash_table *h, int prefix, int final_char) {
 entry * 
 hashCodeLookup(hash_table *h, int code) {	
 
-	assert(code < h->size); //valid codes
+	assert(code <= h->size); //valid codes
+	assert(code != EMPTYCODE);
 
-	if (code < h->n) return &(h->codeArray[code]);
+	if (code <= h->n) return &(h->codeArray[code-1]); //one less, b/c indexed by zero
 	else return NULL; // not
 
 
@@ -385,6 +389,9 @@ hashGetPrefix(hash_table *h, int code)
 int 
 hashGetChar(hash_table *h, int code)
 {
+	assert(code != EMPTYCODE);
+	assert(code <= h->size);
+
 	entry *e = hashCodeLookup(h, code);
 	assert(e);
 

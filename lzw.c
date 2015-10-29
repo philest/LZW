@@ -120,12 +120,17 @@ void encode(int max_bits)
 		{	
 			//write the prefix 
 			#ifndef COMPARE_TABLES
-			putBits(hashGetNumBits(table), code);
+				putBits(hashGetNumBits(table), code);
 			#endif
+
+			#ifdef COMPARE_TABLES
+				printf("code: -%d-\n", code);
+			#endif
+
 
 			//if room: put the new prefix, char pair in table
 			if (!hashFull(table))
-				hashInsert(table, code, k, hashGetN(table), 0);
+				hashInsert(table, code, k, hashGetN(table) + 1, 0);
 			
 			//make that final character the new prefix code
 			ent = hashLookup(table, EMPTYCODE, k);
@@ -134,12 +139,14 @@ void encode(int max_bits)
 
 
 	}
-
-	if (code != EMPTYCODE) putBits(hashGetNumBits(table), code);
-	flushBits();
+	#ifndef COMPARE_TABLES
+		if (code != EMPTYCODE) putBits(hashGetNumBits(table), code);
+		flushBits();
+	#endif
 
 	#ifdef COMPARE_TABLES
-	hashPrintTable(table, true);
+		printf("code: -%d-\n", code);
+		//hashPrintTable(table, true);
 	#endif
 
 }
@@ -149,6 +156,11 @@ void encode(int max_bits)
 					DECODE FUNCTIONS
 *********************************************************/
 
+  //#define TEST 1
+ //#define COMPARE_TABLES 1
+ 
+ // #define COMPARE_TABLES 1
+ // #define DEBUG 1					
 void decode()
 {	
 	int currByte = 1;
@@ -159,18 +171,23 @@ void decode()
 
 	int numBits = 8; // table full of 256 default one char codes
 
-	hash_table *table = hashCreate(POW_OF_2(DEFAULT_MAX_BITS));
-	Stack kstack = stackCreate(POW_OF_2(DEFAULT_MAX_BITS)); 
 
 	//read max bits signal!
 	status = scanf("%d", &max_bits);
 	if (status < 1)
 		DIE("%s", "scanf of max_bits failed");
 
+	hash_table *table = hashCreate(POW_OF_2(max_bits));
+	Stack kstack = stackCreate(POW_OF_2(max_bits)); 
+
 			//read the next code in input
 	while( (newCode = code = getBits(numBits)) != EOF)
 	{	
-
+		if (code == EMPTYCODE)
+		{
+			//bit overflow! w/ 4096
+			code = POW_OF_2(max_bits);
+		}
 
 		assert(numBits <= max_bits);
 
@@ -178,10 +195,22 @@ void decode()
 		//#define DEBUG (1)
 
 		#ifdef TEST
-			printf("Byte: %d, Current code: %d\n", currByte, code);
+			//printf("Byte: %d, Current code: %d\n", currByte, code);
+			if (code > 4096)
+				printf("Byte: %d, Current code: %d\n", currByte, code);
+
+			if (currByte > 55658 && currByte < 55662)
+			{
+				int jew = 3;
+				jew *= 2;
+			}
+
 		#endif
 
 		entry *e;
+
+		if (code == EMPTYCODE)
+			WARN("Empty code found at byte %d", currByte);
 
 			// unknown code found!
 		if ((e = hashCodeLookup(table, code)) == NULL)
@@ -239,7 +268,7 @@ void decode()
 
 								              //insert the prefix (oldCode), 
 		if (oldCode != EMPTYCODE && !hashFull(table))             //char (final_char) pair in table
-			hashInsert(table, oldCode, final_char, hashGetN(table), 0);
+			hashInsert(table, oldCode, final_char, hashGetN(table) + 1, 0);
 		
 		oldCode = newCode;
 		numBits = decodeHashGetNumBits(table);
@@ -255,7 +284,11 @@ void decode()
 	}
 
 	#ifdef COMPARE_TABLES
-	hashPrintTable(table, true);
+
+		#ifndef TEST
+		hashPrintTable(table, true);
+		#endif 
+
 	#endif
 
 	#ifdef TEST

@@ -13,7 +13,8 @@ Date	Time	Spent	Work completed
 10/26	20:00	2:00	Implementing stage 2.
 10/27	18:00	2:00	Debugging valgrind errors w/ hash table growth.
 10/27	20:00	1:00	Basic arg-parsing, implemented max-bits. 
-
+10/28	8:00	2:00	Solved bit-overflow nightmare.
 
 		TOTAL:	
 
+I write this in recovery from the trauma of debugging LZW. It was incredibly frusturating to prod at my code and guess at what caused a few byte errors in Gutenberg Etexts. Particularly hellish was getting overflow, and wondering why the heck I was receiving a '0' code in the middle of my decompression. 
