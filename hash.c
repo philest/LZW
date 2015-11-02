@@ -76,7 +76,7 @@ hashCreate(int size) {
 	// initialize with each one character string 
 	int i;
 	for (i = 0; i < 256; i++)
-		hashInsert(h, EMPTYCODE, i, h->n + 1, 0); // 0 times used
+		hashInsert(h, EMPTYCODE, i, h->n + NUM_SPEC_CODES, 0); // 0 times used
 
 	return h;
 }
@@ -122,7 +122,7 @@ hashGetNumBits(hash_table *h)
 
 	//grow exponent until it can a bitfield of that length
 	//can represent that number of codes
-	while (POW_OF_2(expon) < h->n)
+	while (POW_OF_2(expon) < h->n + NUM_SPEC_CODES)
 		expon++;  
 
 	return expon;
@@ -131,6 +131,8 @@ hashGetNumBits(hash_table *h)
 int
 decodeHashGetNumBits(hash_table *h)
 {
+	assert(0);
+
 	int expon = 1;	
 
 	//grow exponent until it can a bitfield of that length
@@ -165,6 +167,7 @@ int
 hashInsert(hash_table *h, int prefix, int final_char, int code, int times_used) {
 
 	assert(code != EMPTYCODE);
+	assert(code != INC_BIT_CODE);
 	assert(code <= h->size);
 
 	int hash_key; 
@@ -249,10 +252,11 @@ hashDelete(hash_table *h, int prefix, int final_char) {
 entry * 
 hashCodeLookup(hash_table *h, int code) {	
 
-	assert(code <= h->size); //valid codes
+	assert(code < h->size); //valid codes // the last NUM_SPEC_CODE spaces are unfilled
 	assert(code != EMPTYCODE);
+	assert(code != INC_BIT_CODE);
 
-	if (code <= h->n) return &(h->codeArray[code-1]); //one less, b/c indexed by zero
+	if (code < h->n + NUM_SPEC_CODES) return &(h->codeArray[code- NUM_SPEC_CODES]); //one less, b/c indexed by zero
 	else return NULL; // not
 
 
@@ -283,7 +287,7 @@ hashLookup(hash_table *h, int prefix, int final_char) {
 bool
 hashFull(hash_table *h) {
 
-	return h->n >= h->size; 
+	return h->n + NUM_SPEC_CODES >= h->size; 
 }
 
 

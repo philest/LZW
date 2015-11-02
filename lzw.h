@@ -12,6 +12,9 @@
 #include <assert.h>
 
 #define EMPTYCODE (0)
+#define INC_BIT_CODE (1)
+
+#define NUM_SPEC_CODES (2)
 
 #define DEFAULT_MAX_BITS (12)
 #define POW_OF_2(exp) (1 << exp)

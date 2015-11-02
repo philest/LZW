@@ -100,27 +100,58 @@ main(int argc, const char* argv[])
 						ENCODE
 *********************************************************/
 
+// #define COMPARE_TABLES 1
+
+//when did you mark bits
+
 
 void encode(int max_bits)
 {
+	int old_num_bits = 9; //starting with 256 + 2 codes 
+
 	hash_table *table = hashCreate(POW_OF_2(max_bits));
 
 	int k; //char just read
 	int code = EMPTYCODE; //code to prefix, or code of newly inserted
 	entry *ent; 
+	int new_num_bits;
 
 	//signal the max bits
-	printf("%d", max_bits);
+	printf("%d:", max_bits);
+
+
+	// #define SIGNAL 1
+
+	#ifdef SIGNAL
+		int currByte = 0;
+	#endif
+
 
 	while((k = getchar()) != EOF) {
+		#ifdef SIGNAL
+			currByte++;
+		#endif
+
+
 		if ((ent = hashLookup(table, code, k)) != NULL) //it's in table
 			code = hashGetCode(ent); //it's in table, so get code
-		
 		else //new code!
 		{	
 			//write the prefix 
 			#ifndef COMPARE_TABLES
-				putBits(hashGetNumBits(table), code);
+
+				new_num_bits = hashGetNumBits(table);
+				
+				if (new_num_bits != old_num_bits) //signal an bit increase
+					{
+						putBits(old_num_bits, INC_BIT_CODE);
+
+						#ifdef SIGNAL
+						fprintf(stderr, "INC BIT signal at byte %d", currByte);
+						#endif
+					}
+
+				putBits(new_num_bits, code);
 			#endif
 
 			#ifdef COMPARE_TABLES
@@ -130,23 +161,33 @@ void encode(int max_bits)
 
 			//if room: put the new prefix, char pair in table
 			if (!hashFull(table))
-				hashInsert(table, code, k, hashGetN(table) + 1, 0);
+				hashInsert(table, code, k, hashGetN(table) + NUM_SPEC_CODES, 0);
 			
 			//make that final character the new prefix code
 			ent = hashLookup(table, EMPTYCODE, k);
 			code = hashGetCode(ent);
+
+			old_num_bits = new_num_bits; //what was new is now old.
 		}
 
 
 	}
 	#ifndef COMPARE_TABLES
-		if (code != EMPTYCODE) putBits(hashGetNumBits(table), code);
-		flushBits();
+		if (code != EMPTYCODE)
+		{	
+			new_num_bits = hashGetNumBits(table);
+				
+			if (new_num_bits != old_num_bits) //signal an bit increase
+				putBits(old_num_bits, INC_BIT_CODE);
+
+			putBits(new_num_bits, code);
+			flushBits();
+		}
 	#endif
 
 	#ifdef COMPARE_TABLES
-		printf("code: -%d-\n", code);
-		//hashPrintTable(table, true);
+		//printf("code: -%d-\n", code);
+		hashPrintTable(table, true);
 	#endif
 
 }
@@ -169,24 +210,36 @@ void decode()
 	int oldCode = EMPTYCODE, newCode, code, final_char;
 	int max_bits, status; 
 
-	int numBits = 8; // table full of 256 default one char codes
+	int numBits = 9; // table full of 256 default one char codes + 2 spec char
 
 
 	//read max bits signal!
-	status = scanf("%d", &max_bits);
+	status = scanf("%d:", &max_bits);
 	if (status < 1)
 		DIE("%s", "scanf of max_bits failed");
 
 	hash_table *table = hashCreate(POW_OF_2(max_bits));
 	Stack kstack = stackCreate(POW_OF_2(max_bits)); 
 
+
+
 			//read the next code in input
 	while( (newCode = code = getBits(numBits)) != EOF)
 	{	
+
+
+
 		if (code == EMPTYCODE)
-		{
+		{	
+			DIE("%s", "this shouldnt happen!");
 			//bit overflow! w/ 4096
 			code = POW_OF_2(max_bits);
+		}
+
+		if (code == INC_BIT_CODE)
+		{
+			numBits++;
+			continue;
 		}
 
 		assert(numBits <= max_bits);
@@ -268,17 +321,9 @@ void decode()
 
 								              //insert the prefix (oldCode), 
 		if (oldCode != EMPTYCODE && !hashFull(table))             //char (final_char) pair in table
-			hashInsert(table, oldCode, final_char, hashGetN(table) + 1, 0);
+			hashInsert(table, oldCode, final_char, hashGetN(table) + NUM_SPEC_CODES, 0);
 		
 		oldCode = newCode;
-		numBits = decodeHashGetNumBits(table);
-
-
-		// if (currByte == 386081)
-		// {
-		// 	int jew;
-		// 	jew = 55;
-		// }
 
 
 	}
