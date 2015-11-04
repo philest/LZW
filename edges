@@ -1,0 +1,6 @@
+	files don't exist
+	empty crap
+
+	> If the program is given a -i flag loaded from a table that doesn't fit in
+    > it (say if that table was created with -m 20), should it reject it as
+    > invalid?  (Your program gives an "invalid entry" error).
