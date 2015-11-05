@@ -115,8 +115,8 @@ void dump_table(hash_table *table, char*fname)
 
 	for(int code = NUM_SPEC_CODES; code < (hashGetN(table) + NUM_SPEC_CODES); code++) //codes start at 1
 	{
-		fprintf(fout, "%d-%d-%d\n", hashGetPrefix(table, code),
-										hashGetChar(table, code), code);
+		fprintf(fout, "%d-%d\n", hashGetPrefix(table, code),
+										hashGetChar(table, code));
 	}
 
 	fclose(fout);
@@ -127,7 +127,7 @@ hash_table *read_table(char*fname, int max_bits)
 {
 	int prefix;
 	int final_char;
-	int code;
+	int status, code;
 
 	hash_table *new_table = hashCreate(POW_OF_2(max_bits));
 
@@ -136,13 +136,11 @@ hash_table *read_table(char*fname, int max_bits)
 	if (!fin)
 		DIE("%s", "file already existed or open failed!");
 
-	int status;
 
-	int i = 0;
+	code = NUM_SPEC_CODES; //codes start after special codes
 
-	while((status = fscanf(fin, "%d-%d-%d\n", &prefix, &final_char, &code) == 3))
+	while((status = fscanf(fin, "%d-%d\n", &prefix, &final_char) == 2))
 	{
-		i++;
 
 		assert(code != EMPTYCODE);
 		assert(code != INC_BIT_CODE);
@@ -150,6 +148,7 @@ hash_table *read_table(char*fname, int max_bits)
 		assert(final_char < 256);
 		hashInsert(new_table, prefix, final_char, code, 0);	
 
+		code++;
 	}
 
 	return new_table;
