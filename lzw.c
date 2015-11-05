@@ -10,12 +10,13 @@
 
 #define DONT_PRUNE (-1)
 #define NONE "none"
+
 //return TRUE if same string, FALSE otherwise
 // #define my_strcmp(str1, str2) (strcmp(str1,str2) == 0)
 
 void test(void);
 
-void encode(int max_bits, char*output_file, char*input_file);
+void encode(int max_bits, char*output_file, char*input_file, int prune_bar);
 
 void decode(char*output_file);
 
@@ -35,7 +36,7 @@ main(int argc, const char* argv[])
 	int max_bits = DEFAULT_MAX_BITS; //-m arg
 	char input_file[PATH_MAX] = "none"; //-i arg 
 	char output_file[PATH_MAX] = "none"; //-o arg
-	int prune = DONT_PRUNE; //-p arg
+	int prune_bar = DONT_PRUNE; //-p arg
 
 	/***** READ ARGS ******/
 
@@ -70,9 +71,9 @@ main(int argc, const char* argv[])
 		}
 		else if (strcmp(argv[i], "-p") == 0)
 		{
-			prune = atoi(argv[i+1]);
+			prune_bar = atoi(argv[i+1]);
 
-			if(strcmp(argv[i+1], "0") != 0 && prune == 0)
+			if(strcmp(argv[i+1], "0") != 0 && prune_bar == 0)
 				DIE("%s", "improper -p format: must be integer!");
 		}	
 			// anything not preceded by a flag!  
@@ -85,7 +86,7 @@ main(int argc, const char* argv[])
 
 		//check whether called by encode (last six characters)
 	if (strcmp((*argv+(strlen(argv[0]) - 6)), "encode") == 0)
-		encode(max_bits, output_file, input_file);
+		encode(max_bits, output_file, input_file, prune_bar);
 	else if (strcmp((*argv+(strlen(argv[0]) - 6)), "decode") == 0)
 		decode(output_file);
 	else
@@ -167,9 +168,10 @@ hash_table *read_table(char*fname, int max_bits)
  // #define COMPARE_TABLES 1
 
 //when did you mark bits
+	// #define PTABLE 1
+	// #define COMPARE_TABLES 1
 
-
-void encode(int max_bits, char*output_file, char *input_file)
+void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 {
 	int old_num_bits = 9; //starting with 256 + 2 codes 
 
@@ -190,9 +192,9 @@ void encode(int max_bits, char*output_file, char *input_file)
 
 	//in encoded output header:
 	//signal the max bits and input file's name
-	printf("%d %s \n", max_bits, input_file);
+	printf("%d %s %d\n", max_bits, input_file, prune_bar);
 
-	// #define SIGNAL 1
+	//#define SIGNAL 1
 
 	#ifdef SIGNAL
 		int currByte = 0;
@@ -206,10 +208,12 @@ void encode(int max_bits, char*output_file, char *input_file)
 
 
 		if ((ent = hashLookup(table, code, k)) != NULL) //it's in table
-			code = hashGetCode(ent); //it's in table, so get code
+			{
+				code = hashGetCode(ent); //it's in table, so get code
+				hashIncrUse(table, code); //increment use count
+			}
 		else //new code!
 		{	
-
 			new_num_bits = hashGetNumBits(table);
 
 			//write the prefix 
@@ -233,12 +237,25 @@ void encode(int max_bits, char*output_file, char *input_file)
 
 
 			//if room: put the new prefix, char pair in table
-			if (!hashFull(table))
+			if (!hashOneFromFull(table))
 				hashInsert(table, code, k, hashGetN(table) + NUM_SPEC_CODES, 0);
 			
 			//make that final character the new prefix code
 			ent = hashLookup(table, EMPTYCODE, k);
 			code = hashGetCode(ent);
+
+			//increment that char's use count
+			hashIncrUse(table, code); //increment use count
+
+			if (hashFull(table) && prune_bar != DONT_PRUNE) //JUST became full: prune now. 
+				{	
+					#ifdef PTABLE
+						hashPrintTable(table, true);
+						exit(0);
+					#endif
+					table = hashPrune(table, prune_bar); //replace table with pruned table
+					putBits(new_num_bits, PRUNE_CODE);
+				}
 
 			old_num_bits = new_num_bits; //what was new is now old.
 		}
@@ -266,7 +283,6 @@ void encode(int max_bits, char*output_file, char *input_file)
 	if(strcmp(output_file, NONE) != 0)
 		dump_table(table, output_file);
 
-
 }
 
 
@@ -277,21 +293,27 @@ void encode(int max_bits, char*output_file, char *input_file)
   //#define TEST 1
  //#define COMPARE_TABLES 1
  
- // #define COMPARE_TABLES 1
-  //#define DEBUG 1					
+  //#define COMPARE_TABLES 1
+ // #define DEBUG 1		
+
+ //#define WHERE 1 
+
+	// #define PTABLE 1
+
 void decode(char* output_file)
 {	
 	int currByte = 1;
 
+	//bool just_pruned = false; //was pruned last pass?
 //	#define DEBUG 1 
 
 	#ifdef DEBUG
-	char *comp_file = "style";
-	FILE *cmp_file = fopen(comp_file, "r");
+		char *comp_file = "style";
+		FILE *cmp_file = fopen(comp_file, "r");
 	#endif
 
 	int oldCode = EMPTYCODE, newCode, code, final_char;
-	int max_bits, status; 
+	int max_bits, status, prune_bar; 
 
 	char *input_file_name = calloc(PATH_MAX, sizeof(char));
 
@@ -299,7 +321,7 @@ void decode(char* output_file)
 
 
 	//read max bits signal!
-	status = scanf("%d %s \n", &max_bits, input_file_name);
+	status = scanf("%d %s %d\n", &max_bits, input_file_name, &prune_bar);
 	if (status < 2)
 		DIE("%s", "scanf of max_bits, input_file_name failed");
 	
@@ -316,12 +338,23 @@ void decode(char* output_file)
 	Stack kstack = stackCreate(POW_OF_2(max_bits)); 
 
 
-
 			//read the next code in input
 	while( (newCode = code = getBits(numBits)) != EOF)
 	{	
 
+		#ifdef WHERE
+			printf("%d-%d\n", numBits, code);
+		#endif
 
+
+		if (code == PRUNE_CODE && prune_bar != DONT_PRUNE)
+			{	
+				#ifdef PTABLE
+					hashPrintTable(table, true);
+					exit(0);
+				#endif
+				table = hashPrune(table, prune_bar);
+			}
 
 		if (code == EMPTYCODE)
 		{	
@@ -367,14 +400,18 @@ void decode(char* output_file)
 		}
 
 		e = hashCodeLookup(table, code); //find pair in table
-		if(e == NULL)
+	  	if(e == NULL)
 		{
 			DIE("%s", "An unknown code-- and not kwkwk case-- was found\n");
 		}
 
+
 		   //until the prefix is empty, accumulate chars
 		while (e->prefix != EMPTYCODE)
-		{
+		{	
+			//update use count (efficient alg?)
+			hashIncrUse(table, e->code);
+
 			stackPush(kstack, e->final_char);
 			e = hashCodeLookup(table, e->prefix); 
 					// dive into prefix codes

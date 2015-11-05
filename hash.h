@@ -52,6 +52,12 @@ hashPrintTable(hash_table *h, bool print_array);
 bool
 hashFull(hash_table *h);
 
+// Return true if inserting on more element would make the table full,
+// False otherwise.
+bool
+hashOneFromFull(hash_table *h);
+
+
 
 /********************************************************
 				ARRAY & ENTRY FUNCTIONS (DECODE)
@@ -69,6 +75,17 @@ hashGetPrefix(hash_table *h, int code);
 // Return the final character for a given given table and code
 int 
 hashGetChar(hash_table *h, int code);
+
+// Increment the given code's use count
+void
+hashIncrUse(hash_table *h, int code);
+
+/* Return a pruned version of table that includes
+	1) Every one char string;
+	2) Every code with a use count >= prune_bar; and
+	3) Every non-empty prefix of these table entries. */
+hash_table *
+hashPrune(hash_table *h, int prune_bar);
 
 
 /********************************************************

@@ -82,38 +82,34 @@ hashCreate(int size) {
 }
 
 
-//NOTE: DOES NOT TRANSFER TIMES_USED
+
 hash_table *
-hashGrow(hash_table *h, int new_size) {
+hashPrune(hash_table *h, int prune_bar)
+{	
+	assert(hashGetN(h) == h->size - NUM_SPEC_CODES);
 
-	hash_table *h2; // new table to create
-	hash_table swap; // container for destroying old table
-	struct entry *e; // iterator for entries
-	int i;
+	//create a new table of old's size [with 1) 256 single char strings]
+	hash_table *pruned_table = hashCreate(h->size);
 
-	h2 = hashInternalCreate(new_size);
+	//include all strings with use counts at or above prune_bar [2) and 3)]
+	for(int code = 256 + NUM_SPEC_CODES; code < h->size; code++)
+		{	
+			struct entry *ent; 
+			ent = hashCodeLookup(h, code);
+			assert(ent);
 
-	for(i = 0; i < h->size; i++) //traverse table
-	{
-		for(e = h->table[i]; e != 0; e = e->next_entry) //traverse chain
-		{
-			/*insert old entrys into new hash_table*/
-			hashInsert(h2, e->prefix, e->final_char, e->code, e->times_used); //TODO insert times
+			if (ent->times_used >= prune_bar) //meets the threshold
+				{
+					assert(ent->prefix == EMPTYCODE || hashCodeLookup(h, ent->prefix));
+					hashInsert(pruned_table, ent->prefix, ent->final_char,
+							hashGetN(pruned_table) + NUM_SPEC_CODES, 0);
+				}
 		}
-	}
 
-	//swap h2 and h1, then destroy h2
-	swap = *h;
-	*h = *h2;
-	*h2 = swap;
-
-	hashDestroy(h2);
-
-	// grow the array
-	h->codeArray = realloc(h->codeArray, new_size);
-
-	return h; //new table
+	return pruned_table;
 }
+
+
 
 int
 hashGetNumBits(hash_table *h)
@@ -296,6 +292,12 @@ hashFull(hash_table *h) {
 	return h->n + NUM_SPEC_CODES >= h->size; 
 }
 
+bool
+hashOneFromFull(hash_table *h)
+{
+	return h->n + NUM_SPEC_CODES + 1 >= h->size;
+}
+
 
 void
 hashDestroy(hash_table *h) {
@@ -409,6 +411,18 @@ hashGetChar(hash_table *h, int code)
 
 }
 
+void
+hashIncrUse(hash_table *h, int code)
+{
+	assert(code != EMPTYCODE);
+	assert(code <= h->size);
+
+	entry *e = hashCodeLookup(h, code);
+	assert(e);
+
+	e->times_used++; //increment use count
+}
+
 
 
 void string_print(hash_table *h, int code)
@@ -424,6 +438,11 @@ void string_print(hash_table *h, int code)
 			printf("%d ", e->final_char);
 
 }
+
+
+
+
+
 
 
 

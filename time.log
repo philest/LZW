@@ -15,6 +15,7 @@ Date	Time	Spent	Work completed
 10/27	20:00	1:00	Basic arg-parsing, implemented max-bits. 
 10/28	8:00	2:00	Solved bit-overflow nightmare.
 11/03	20:00	2:00	String table IO
+11/04	19:00	1:30	Compressed table IO.
 
 		TOTAL:	
 
