@@ -257,6 +257,8 @@ hashCodeLookup(hash_table *h, int code) {
 	assert(code < h->size); //valid codes // the last NUM_SPEC_CODE spaces are unfilled
 	assert(code != EMPTYCODE);
 	assert(code != INC_BIT_CODE);
+	assert(code != PRUNE_CODE);
+	assert(code >= NUM_SPEC_CODES);
 
 	if (code < h->n + NUM_SPEC_CODES) return &(h->codeArray[code- NUM_SPEC_CODES]); //one less, b/c indexed by zero
 	else return NULL; // not
@@ -350,8 +352,8 @@ hashPrintTable(hash_table *h, bool print_array)
 	int i;
 	struct entry * e;
 
-	printf(" (Prefix | Char) | Code    | String \n");
-    printf("--------   ------  -------   ------\n");
+	printf(" (Prefix | Char) | Code  |  Times USED | String \n");
+    printf("--------   ------  -------   -------     ------ \n");
 
 	for(i = 0; i < h->size; i++)
 		{
@@ -359,8 +361,8 @@ hashPrintTable(hash_table *h, bool print_array)
 				{	
 					if (!print_array)
 						{
-							printf("%8d | %5d | %8d | ", 
-								e->prefix, e->final_char, e->code);
+							printf("%8d | %5d | %8d | %5d | ", 
+								e->prefix, e->final_char, e->code, e->times_used);
 							string_print(h, e->code);
 							printf("\n");
 						}
@@ -375,8 +377,8 @@ hashPrintTable(hash_table *h, bool print_array)
 				//don't print zero-intialized values
 			if (print_array && (e->prefix != 0 || e->final_char != 0)) 
 				{
-					printf("%8d | %5d | %8d | ", 
-						e->prefix, e->final_char, e->code);
+					printf("%8d | %5d | %8d | %5d | ", 
+						e->prefix, e->final_char, e->code, e->times_used);
 					string_print(h, e->code);
 					printf("\n");
 				}

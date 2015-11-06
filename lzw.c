@@ -171,9 +171,13 @@ hash_table *read_table(char*fname, int max_bits)
 	// #define PTABLE 1
 	// #define COMPARE_TABLES 1
 
+// #define PTABLE 1
+
+
 void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 {
 	int old_num_bits = 9; //starting with 256 + 2 codes 
+	int prune_now = false;
 
 	hash_table *table;
 
@@ -229,6 +233,20 @@ void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 					}
 
 				putBits(new_num_bits, code);
+
+				if (prune_now) //last read said to prune (filled table)
+				{
+					table = hashPrune(table, prune_bar); //replace table with pruned table
+					putBits(new_num_bits, PRUNE_CODE);
+					prune_now = false; //reset
+
+					#ifdef PTABLE
+						hashPrintTable(table, true);
+						exit(0);
+					#endif
+
+				}
+
 			#endif
 
 			#ifdef COMPARE_TABLES
@@ -237,7 +255,7 @@ void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 
 
 			//if room: put the new prefix, char pair in table
-			if (!hashOneFromFull(table))
+			if (!hashFull(table))
 				hashInsert(table, code, k, hashGetN(table) + NUM_SPEC_CODES, 0);
 			
 			//make that final character the new prefix code
@@ -247,15 +265,20 @@ void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 			//increment that char's use count
 			hashIncrUse(table, code); //increment use count
 
-			if (hashFull(table) && prune_bar != DONT_PRUNE) //JUST became full: prune now. 
-				{	
-					#ifdef PTABLE
-						hashPrintTable(table, true);
-						exit(0);
-					#endif
-					table = hashPrune(table, prune_bar); //replace table with pruned table
-					putBits(new_num_bits, PRUNE_CODE);
-				}
+			if (hashFull(table) && prune_bar != DONT_PRUNE) //JUST became full: prune now.
+			{
+				prune_now = true;
+			}
+
+			// if (hashFull(table) && prune_bar != DONT_PRUNE) //JUST became full: prune now. 
+			// 	{	
+			// 		#ifdef PTABLE
+			// 			hashPrintTable(table, true);
+			// 			exit(0);
+			// 		#endif
+			// 		table = hashPrune(table, prune_bar); //replace table with pruned table
+			// 		putBits(new_num_bits, PRUNE_CODE);
+			// 	}
 
 			old_num_bits = new_num_bits; //what was new is now old.
 		}
@@ -292,13 +315,12 @@ void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 
   //#define TEST 1
  //#define COMPARE_TABLES 1
- 
-  //#define COMPARE_TABLES 1
- // #define DEBUG 1		
+  // #define COMPARE_TABLES 1
+  //  #define PTABLE 1
+ #define DEBUG 1		
 
  //#define WHERE 1 
 
-	// #define PTABLE 1
 
 void decode(char* output_file)
 {	
@@ -308,7 +330,7 @@ void decode(char* output_file)
 //	#define DEBUG 1 
 
 	#ifdef DEBUG
-		char *comp_file = "style";
+		char *comp_file = "alice";
 		FILE *cmp_file = fopen(comp_file, "r");
 	#endif
 
@@ -349,11 +371,12 @@ void decode(char* output_file)
 
 		if (code == PRUNE_CODE && prune_bar != DONT_PRUNE)
 			{	
+				table = hashPrune(table, prune_bar);
 				#ifdef PTABLE
 					hashPrintTable(table, true);
 					exit(0);
 				#endif
-				table = hashPrune(table, prune_bar);
+				continue;
 			}
 
 		if (code == EMPTYCODE)
@@ -404,6 +427,9 @@ void decode(char* output_file)
 		{
 			DIE("%s", "An unknown code-- and not kwkwk case-- was found\n");
 		}
+
+		if (e->prefix == EMPTYCODE)	//for single char strs
+			hashIncrUse(table, e->code);
 
 
 		   //until the prefix is empty, accumulate chars
