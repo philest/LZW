@@ -7,7 +7,7 @@ all: clean lzw
 clean: 
 	$(RM) lzw.o hash.o code.o code1.o code2.o code.o stack.o lzw encode decode
 
-lzw: lzw.o hash.o stack.o code2.o
+lzw: lzw.o hash.o stack.o code.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 lzw.o: lzw.c lzw.h hash.h
@@ -19,8 +19,8 @@ hash.o: hash.c hash.h
 stack.o: stack.c stack.h
 	$(CC) $(CFLAGS) -c $<
 
-code2.o: code2.c code.h
-	$(CC) $(CFLAGS) -c code2.c
+code.o: /c/cs323/Hwk4/code.c /c/cs323/Hwk4/code.h
+	$(CC) $(CFLAGS) -c /c/cs323/Hwk4/code.c
 
 
 

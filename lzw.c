@@ -3,7 +3,7 @@
 
 #include "lzw.h"
 #include "hash.h"
-#include "code.h"
+#include "/c/cs323/Hwk4/code.h"
 #include "stack.h"
 
 #define LZW (1) // for stack.h modules
