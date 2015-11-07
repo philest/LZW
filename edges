@@ -7,6 +7,6 @@ X	> If the program is given a -i flag loaded from a table that doesn't fitn
 
 X   decode -o -> to encode -i 
 
-    fread and fwrite it yo!
+X    fread and fwrite it yo!
 
     argument checks!

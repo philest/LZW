@@ -19,8 +19,10 @@ Date	Time	Spent	Work completed
 11/05	10:00	1:45	Pruning.
 11/05	19:00	2:00	A better pruning algorithim.
 11/07	10:00	2:00	Many prune bugs fixed; use counts fixed; my tears wept.
+11/07	12:00	2:00	Final edge casing; arguments; arg contradictions.
 
 
 		TOTAL:	
 
-I write this in recovery from the trauma of debugging LZW. It was incredibly frusturating to prod at my code and guess at what caused a few byte errors in Gutenberg Etexts. Particularly hellish was getting overflow, and wondering why the heck I was receiving a '0' code in the middle of my decompression. The worst was debugging the pruning algorithim-- and syncing encode and decode for this. In particular, my tables weren't synced-- and even after that, they became out of sync.s
+I write this in recovery from the trauma of debugging LZW. It was incredibly frusturating to prod at my code and guess at what caused a few byte errors in Gutenberg Etexts. Particularly hellish was getting overflow, and wondering why the heck I was receiving a '0' code in the middle of my decompression. But the worst was debugging my pruning algorithim-- and syncing encode and decode for this. In particular, my tables weren't synced-- and even after that, they became out of sync. It took me a long time to realize that my tables need not have the same number of entries before pruning. This allowed me to cut a ugly knot of workaround code and complete the LZW.
+

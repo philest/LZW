@@ -32,15 +32,17 @@ int
 main(int argc, const char* argv[])
 {		
 
-	// char *none = calloc(100, sizeof(char));
-	// none = "none";
-
-
 	//set default args!
 	int max_bits = DEFAULT_MAX_BITS; //-m arg
 	char input_file[PATH_MAX] = "none"; //-i arg 
 	char output_file[PATH_MAX] = "none"; //-o arg
 	int prune_bar = DONT_PRUNE; //-p arg
+
+	bool is_decode = false;
+
+	if (strcmp((*argv+(strlen(argv[0]) - 6)), "decode") == 0)
+		is_decode = true;
+
 
 	/***** READ ARGS ******/
 
@@ -55,11 +57,19 @@ main(int argc, const char* argv[])
 
 		if (strcmp(argv[i], "-m") == 0)
 		{
-			
+			if (is_decode)
+				DIE("%s", "invalid -m for decode");
+
+			if (argv[i+1][0] == '+')
+				DIE("%s", "don't precede with pos sign");
+
 			max_bits = atoi(argv[i+1]);
 
 			if(strcmp(argv[i+1], "0") != 0 && max_bits == 0)
 				DIE("%s", "improper -m format: must be integer!");
+
+			if (max_bits < 1) //not a positive int
+				DIE("%s", "max_bits must be a positive int!");
 
 			if (max_bits <= 8 || max_bits > 20)
 				max_bits = DEFAULT_MAX_BITS;
@@ -67,6 +77,9 @@ main(int argc, const char* argv[])
 
 		else if (strcmp(argv[i], "-i") == 0)
 		{
+			if (is_decode)
+				DIE("%s", "invalid -i for decode");
+
 			strcpy(input_file, argv[i+1]);
 		}
 		else if (strcmp(argv[i], "-o") == 0)
@@ -75,10 +88,20 @@ main(int argc, const char* argv[])
 		}
 		else if (strcmp(argv[i], "-p") == 0)
 		{
+
+			if (is_decode)
+				DIE("%s", "invalid -p for decode");
+
+			if (argv[i+1][0] == '+')
+				DIE("%s", "don't precede with pos sign");
+
 			prune_bar = atoi(argv[i+1]);
 
 			if(strcmp(argv[i+1], "0") != 0 && prune_bar == 0)
 				DIE("%s", "improper -p format: must be integer!");
+
+			if (prune_bar < 1)
+				DIE("%s", "USED must be poss int");
 		}	
 			// anything not preceded by a flag!  
 		else if ((i == 1 ) || !(strcmp(argv[i - 1], "-m") == 0 || strcmp(argv[i - 1], "-i") == 0 
