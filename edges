@@ -1,11 +1,11 @@
-	files don't exist
+X	files don't exist
 	empty crap
 
-	> If the program is given a -i flag loaded from a table that doesn't fit in
+X	> If the program is given a -i flag loaded from a table that doesn't fitn
     > it (say if that table was created with -m 20), should it reject it as
     > invalid?  (Your program gives an "invalid entry" error).
 
-    decode -o -> to encode -i 
+X   decode -o -> to encode -i 
 
     fread and fwrite it yo!
 

@@ -121,8 +121,12 @@ void dump_table(hash_table *table, char*fname)
 
 	for(int code = NUM_SPEC_CODES; code < (hashGetN(table) + NUM_SPEC_CODES); code++) //codes start at 1
 	{
-		fprintf(fout, "%d-%d\n", hashGetPrefix(table, code),
-										hashGetChar(table, code));
+		int prefix = hashGetPrefix(table, code);
+		int final_char = hashGetChar(table, code);
+
+		fwrite(&prefix, sizeof(prefix), 1, fout);
+		fwrite(&final_char, sizeof(final_char), 1, fout);
+
 	}
 
 	fclose(fout);
@@ -131,9 +135,11 @@ void dump_table(hash_table *table, char*fname)
 
 hash_table *read_table(char*fname, int max_bits)
 {
-	int prefix;
-	int final_char;
+	// int prefix;
+	// int final_char;
 	int status, code;
+
+	int pref_finalchar[2] = {0,0};
 
 	hash_table *new_table = hashCreate(POW_OF_2(max_bits));
 
@@ -145,15 +151,15 @@ hash_table *read_table(char*fname, int max_bits)
 
 	code = NUM_SPEC_CODES; //codes start after special codes
 
-	while((status = fscanf(fin, "%d-%d\n", &prefix, &final_char) == 2))
+	while((status = fread(pref_finalchar, sizeof(int), 2, fin)) == 2)
 	{
 
 		assert(code != EMPTYCODE);
 		assert(code != INC_BIT_CODE);
 
-		assert(final_char < 256);
-		hashInsert(new_table, prefix, final_char, code, 0);	
+		assert(pref_finalchar[1] < 256);
 
+		hashInsert(new_table, pref_finalchar[0], pref_finalchar[1], code, 0);
 		code++;
 	}
 
@@ -182,7 +188,7 @@ hash_table *read_table(char*fname, int max_bits)
 void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 {
 	int old_num_bits = 9; //starting with 256 + 2 codes 
-	int new_num_bits = 9;
+	int new_num_bits;
 
 	hash_table *table;
 
@@ -190,9 +196,15 @@ void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 		{
 			table = read_table(input_file, max_bits);
 			old_num_bits = hashGetNumBits(table);
+
+			if (old_num_bits > max_bits)
+				DIE("%s", "Table read in was bigger than max_bits allowed.");
+
 		}
 	else 
 		table = hashCreate(POW_OF_2(max_bits));
+
+	new_num_bits = old_num_bits; //sync to start
 
 	int k; //char just read
 	int code = EMPTYCODE; //code to prefix, or code of newly inserted
@@ -364,6 +376,9 @@ void decode(char* output_file)
 		{
 			table = read_table(input_file_name, max_bits);
 			numBits = hashGetNumBits(table);
+
+			if (numBits > max_bits)
+				DIE("%s", "table was bigger than max_bits allowed.");
 		}
 	else
 		table = hashCreate(POW_OF_2(max_bits));
