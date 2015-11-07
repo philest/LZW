@@ -165,7 +165,7 @@ hashPrune(hash_table *h, int prune_bar, bool encode)
 
 	free(code_translate);
 
-	// hashDestroy(h);
+	hashDestroy(h);
 
 	return pruned_table;
 }

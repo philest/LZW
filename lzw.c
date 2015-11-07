@@ -14,7 +14,7 @@
 //return TRUE if same string, FALSE otherwise
 // #define my_strcmp(str1, str2) (strcmp(str1,str2) == 0)
 
-void test(void);
+void test(char *file);
 
 void encode(int max_bits, char*output_file, char*input_file, int prune_bar);
 
@@ -31,6 +31,10 @@ int getPrefix(hash_table *h, int code);
 int
 main(int argc, const char* argv[])
 {		
+
+	// char *none = calloc(100, sizeof(char));
+	// none = "none";
+
 
 	//set default args!
 	int max_bits = DEFAULT_MAX_BITS; //-m arg
@@ -90,7 +94,8 @@ main(int argc, const char* argv[])
 	else if (strcmp((*argv+(strlen(argv[0]) - 6)), "decode") == 0)
 		decode(output_file);
 	else
-		DIE("%s", "not designed to be accessed this way!");
+		test(input_file);
+		// DIE("%s", "not designed to be accessed this way!");
 }
 
 
@@ -177,6 +182,7 @@ hash_table *read_table(char*fname, int max_bits)
 void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 {
 	int old_num_bits = 9; //starting with 256 + 2 codes 
+	int new_num_bits = 9;
 
 	hash_table *table;
 
@@ -191,7 +197,6 @@ void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 	int k; //char just read
 	int code = EMPTYCODE; //code to prefix, or code of newly inserted
 	entry *ent; 
-	int new_num_bits;
 
 	//in encoded output header:
 	//signal the max bits and input file's name
@@ -559,11 +564,11 @@ void decode(char* output_file)
 
 
 
-void test()
+void test(char *file)
 {
+	if (strcmp(file, NONE) == 0)
+		printf("im a jew!");
 
-hash_table *table = hashCreate(400);
-hashDestroy(table);
-
+	printf("%s", file);
 }
 
