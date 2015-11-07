@@ -177,6 +177,7 @@ hash_table *read_table(char*fname, int max_bits)
 void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 {
 	int old_num_bits = 9; //starting with 256 + 2 codes 
+	int prune_now = false;
 
 	hash_table *table;
 
@@ -223,7 +224,7 @@ void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 			//write the prefix 
 			#ifndef COMPARE_TABLES
 				
-				if (new_num_bits > old_num_bits) //signal an bit increase
+				if (!prune_now && new_num_bits > old_num_bits) //signal an bit increase
 					{
 						putBits(old_num_bits, INC_BIT_CODE);
 
@@ -232,7 +233,7 @@ void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 						#endif
 					}
 
-				while(new_num_bits < old_num_bits)
+				while(!prune_now && new_num_bits < old_num_bits)
 				{
 					putBits(old_num_bits, DEC_BIT_CODE);
 					old_num_bits--;
@@ -240,31 +241,8 @@ void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 
 				putBits(new_num_bits, code);
 
-			#endif
-
-			// #ifdef COMPARE_TABLES
-			// 	printf("code: -%d-\n", code);
-			// #endif
-
-
-			//if room: put the new prefix, char pair in table
-			if (!hashFull(table))
+				if (prune_now) //last read said to prune (filled table)
 				{
-					hashInsert(table, code, k, hashGetN(table) + NUM_SPEC_CODES, 0);	
-				}	
-
-			//make that final character the new prefix code
-			ent = hashLookup(table, EMPTYCODE, k);
-			hashIncrUse(table, ent->code);
-
-			code = hashGetCode(ent);
-
-			// //increment that char's use count
-			// hashIncrUse(table, code); //increment use count
-
-			if (hashFull(table) && prune_bar != DONT_PRUNE) //JUST became full: prune now.
-			{
-
 					#ifdef B_TABLE
 						hashPrintTable(table, true);
 						exit(0);
@@ -278,22 +256,61 @@ void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 						exit(0);
 					#endif
 
-					// find it's new code in table?
+					// find it's new code in table
+
+
+				}
+
+			#endif
+
+			// #ifdef COMPARE_TABLES
+			// 	printf("code: -%d-\n", code);
+			// #endif
+
+
+			//if room: put the new prefix, char pair in table
+			if (!hashFull(table) && !prune_now)
+				{
+					hashInsert(table, code, k, hashGetN(table) + NUM_SPEC_CODES, 0);	
+				}	
+
+			prune_now = false;
+
+			//make that final character the new prefix code
+			ent = hashLookup(table, EMPTYCODE, k);
+			hashIncrUse(table, ent->code);
+
+			code = hashGetCode(ent);
+
+			// //increment that char's use count
+			// hashIncrUse(table, code); //increment use count
+
+			if (hashFull(table) && prune_bar != DONT_PRUNE) //JUST became full: prune now.
+			{
+				prune_now = true;
 			}
 
+			// if (hashFull(table) && prune_bar != DONT_PRUNE) //JUST became full: prune now. 
+			// 	{	
+			// 		#ifdef PTABLE
+			// 			hashPrintTable(table, true);
+			// 			exit(0);
+			// 		#endif
+			// 		table = hashPrune(table, prune_bar); //replace table with pruned table
+			// 		putBits(new_num_bits, PRUNE_CODE);
+			// 	}
 
 			old_num_bits = new_num_bits; //what was new is now old.
 		}
 
 
 	}
-
 	#ifndef COMPARE_TABLES
 		if (code != EMPTYCODE)
 		{	
 			new_num_bits = hashGetNumBits(table);
 				
-			if (new_num_bits > old_num_bits) //signal an bit increase
+			if (new_num_bits != old_num_bits) //signal an bit increase
 				putBits(old_num_bits, INC_BIT_CODE);
 
 			putBits(new_num_bits, code);
@@ -317,22 +334,23 @@ void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 *********************************************************/
 
   //#define TEST 1
- // #define COMPARE_TABLES 1
+ //#define COMPARE_TABLES 1
   // #define COMPARE_TABLES 1
    // #define PTABLE 1
  // #define DEBUG 1		
 
- // #define WHERE 1 
+ //#define WHERE 1 
 
 
 void decode(char* output_file)
 {	
 	int currByte = 1;
-
-	bool just_pruned = false;
+	// bool just_pruned = false;
 
 	//bool just_pruned = false; //was pruned last pass?
 //	#define DEBUG 1 
+
+	hash_table *old_table;
 
 	#ifdef DEBUG
 		char *comp_file = "C-Delaware";
@@ -378,10 +396,14 @@ void decode(char* output_file)
 		if (code == PRUNE_CODE && prune_bar != DONT_PRUNE)
 			{	
 
+				//update use counts
+				// hashDecodeUseUpdate(table);
+
 				#ifdef B_TABLE
 					hashPrintTable(table, true);
 					exit(0);
 				#endif
+				old_table = table;
 
 				table = hashPrune(table, prune_bar, false);
 				#ifdef PTABLE
@@ -389,7 +411,36 @@ void decode(char* output_file)
 					exit(0);
 				#endif
 
-				just_pruned = true;
+				//convert oldCode to it's new code
+				struct entry *old_ent = hashCodeLookup(old_table, oldCode);
+				struct entry *new_ent;
+
+				if ((new_ent = hashLookup(table, old_ent->prefix, //in new table!
+						 old_ent->final_char)) != NULL)
+					oldCode = new_ent->code; //set to new code
+
+				// if not in table, output it, set oldCode to EMPTY
+				else //NOT in new table
+				{
+					// while (old_ent->prefix != EMPTYCODE)
+					// {	
+					// 	//update use count (efficient alg?)
+					// 	hashIncrUse(table, old_ent->code);
+
+					// 	stackPush(kstack, e->final_char);
+					// 	e = hashCodeLookup(table, e->prefix); 
+					// 			// dive into prefix codes
+					// } 
+
+
+					oldCode = EMPTYCODE;
+				}
+
+
+
+
+
+
 
 				continue;
 			}
@@ -513,7 +564,7 @@ void decode(char* output_file)
 		}
 
 								              //insert the prefix (oldCode), 
-		if (oldCode != EMPTYCODE && !hashFull(table) && !just_pruned)             //char (final_char) pair in table
+		if (oldCode != EMPTYCODE && !hashFull(table))             //char (final_char) pair in table
 			{
 				hashInsert(table, oldCode, final_char, hashGetN(table) + NUM_SPEC_CODES, 0);
 				
@@ -529,10 +580,9 @@ void decode(char* output_file)
 
 			}
 
-    	if (just_pruned == true) //reset it.
-    		just_pruned = false;
 
 		oldCode = newCode;
+
 
 	}
 

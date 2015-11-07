@@ -109,10 +109,12 @@ hashDecodeUseUpdate(hash_table *h)
 hash_table *
 hashPrune(hash_table *h, int prune_bar, bool encode)
 {	
+	int cutoff = 0;
 
-	int last_entry_code, last_entry_prefix, last_entry_char;
+	if (!encode)
+		cutoff = 1;
 
-	assert(hashGetN(h) == h->size - NUM_SPEC_CODES);
+	// assert(hashGetN(h) == h->size - NUM_SPEC_CODES);
 
 	//create a new table of old's size [with 1) 256 single char strings]
 	hash_table *pruned_table = hashCreate(h->size);
@@ -127,7 +129,7 @@ hashPrune(hash_table *h, int prune_bar, bool encode)
 	// int *new_codes = calloc(h->size, sizeof(int));
 
 	//include all strings with use counts at or above prune_bar [2) and 3)]
-	for(int code = 256 + NUM_SPEC_CODES; code < h->size; code++)
+	for(int code = 256 + NUM_SPEC_CODES; code < h->size - cutoff; code++)
 		{	
 			int actual_prefix; //with new code
 			struct entry *ent; 
@@ -145,9 +147,9 @@ hashPrune(hash_table *h, int prune_bar, bool encode)
 					code_translate[code] = hashGetN(pruned_table) + NUM_SPEC_CODES - 1;
 						//the new code just assigned
 
-					last_entry_code = hashGetN(pruned_table) + NUM_SPEC_CODES - 1;
-					last_entry_prefix = actual_prefix;
-					last_entry_char = ent->final_char;
+					// last_entry_code = hashGetN(pruned_table) + NUM_SPEC_CODES - 1;
+					// last_entry_prefix = actual_prefix;
+					// last_entry_char = ent->final_char;
 				}
 
 				// //if encode: delete the last entry
@@ -163,7 +165,7 @@ hashPrune(hash_table *h, int prune_bar, bool encode)
 
 	free(code_translate);
 
-	hashDestroy(h);
+	// hashDestroy(h);
 
 	return pruned_table;
 }
