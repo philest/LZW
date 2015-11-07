@@ -14,8 +14,9 @@
 #define EMPTYCODE (0)
 #define INC_BIT_CODE (1)
 #define PRUNE_CODE (2)
+#define DEC_BIT_CODE (3)
 
-#define NUM_SPEC_CODES (3)
+#define NUM_SPEC_CODES (4)
 
 #define DEFAULT_MAX_BITS (12)
 #define POW_OF_2(exp) (1 << exp)

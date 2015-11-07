@@ -81,30 +81,89 @@ hashCreate(int size) {
 	return h;
 }
 
+void
+hashDecodeUseUpdate(hash_table *h)
+{
+		/* == DECODE USE COUNT UPDATE ========== */
+	//from highest code, at it's use counts to the prefix's. 
+	
+	for (int code = h->size - 1; code >= 256 + NUM_SPEC_CODES; code--)
+	{
+		struct entry *ent;
+		struct entry *child_ent;
+
+		ent = hashCodeLookup(h, code);
+		assert(ent);
+		assert(ent->prefix != EMPTYCODE);
+
+		child_ent = hashCodeLookup(h, ent->prefix);
+		assert(child_ent);
+
+		//add the top layer's times used to its prefix's. 
+		child_ent->times_used += ent->times_used;
+	}
+
+}
 
 
 hash_table *
-hashPrune(hash_table *h, int prune_bar)
+hashPrune(hash_table *h, int prune_bar, bool encode)
 {	
+
+	int last_entry_code, last_entry_prefix, last_entry_char;
+
 	assert(hashGetN(h) == h->size - NUM_SPEC_CODES);
 
 	//create a new table of old's size [with 1) 256 single char strings]
 	hash_table *pruned_table = hashCreate(h->size);
 
+	// for mapping from old code (index) to new code (value at index)
+	int *code_translate = calloc(h->size, sizeof(int));
+
+	for(int i = NUM_SPEC_CODES; i < 256+NUM_SPEC_CODES; i++)
+		code_translate[i] = i; //maps to same value for 0-255 one-char strs
+
+
+	// int *new_codes = calloc(h->size, sizeof(int));
+
 	//include all strings with use counts at or above prune_bar [2) and 3)]
 	for(int code = 256 + NUM_SPEC_CODES; code < h->size; code++)
 		{	
+			int actual_prefix; //with new code
 			struct entry *ent; 
 			ent = hashCodeLookup(h, code);
 			assert(ent);
 
 			if (ent->times_used >= prune_bar) //meets the threshold
-				{
-					assert(ent->prefix == EMPTYCODE || hashCodeLookup(h, ent->prefix));
-					hashInsert(pruned_table, ent->prefix, ent->final_char,
+				{	
+					actual_prefix = code_translate[ent->prefix];
+					assert(actual_prefix == EMPTYCODE || hashCodeLookup(pruned_table, actual_prefix));
+
+					hashInsert(pruned_table, actual_prefix, ent->final_char,
 							hashGetN(pruned_table) + NUM_SPEC_CODES, 0);
+
+					code_translate[code] = hashGetN(pruned_table) + NUM_SPEC_CODES - 1;
+						//the new code just assigned
+
+					last_entry_code = hashGetN(pruned_table) + NUM_SPEC_CODES - 1;
+					last_entry_prefix = actual_prefix;
+					last_entry_char = ent->final_char;
 				}
+
+				// //if encode: delete the last entry
+				// if (encode)
+				// {
+				// 	struct entry* last_entry = hashCodeLookup(pruned_table, last_entry_code);
+				// 	assert(last_entry);
+
+
+				// }
+
 		}
+
+	free(code_translate);
+
+	hashDestroy(h);
 
 	return pruned_table;
 }

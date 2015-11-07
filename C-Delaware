@@ -1,0 +1,763 @@
+.ll 70
+.ce 2
+Coding Standard For C Programs
+Paul D. Amer
+.sp 2
+l.  Comments
+.sp 1
+Comments serve two main purposes:
+.br
+.in+4
+(a)  They help a reader understand broad concepts, and explain
+the approach a program uses to solve a problem.
+.sp
+Every module (procedure or function) must begin with a block of comments
+that describes its purpose.
+Modules are
+.ul
+completely
+documented internally, where 'completely' encompasses that amount of
+documentation which enables a programmer who has never seen the
+code before to understand the purpose without having to read the code.
+(Such a programmer is often the original coder six months after
+implementation when a problem occurs.)
+.sp
+Therefore every module begins with the following header block of comments:
+.in +4
+.ti -4
+1.  Purpose: what does the module do?
+This description is in in prose form following
+all rules of English grammar and punctuation.  Do not describe the
+algorithm in step by step detail.  The program description should be an
+overview written for someone unfamiliar with the assignment.
+.ti -4
+2.  Author and Date
+.ti -4
+3.  Input Parameters:  names and descriptions of parameters passed
+to the procedure
+.ti -4
+4.  Returned Values:  for a procedure, names and descriptions of affected
+parameters; for a function, in addition, an explanation of
+the single returned value
+.ti -4
+5.  Procedures/Functions Called: names of procedures and functions
+that are called from the module (with optional descriptions).  System
+utilities such as printf, getchar need not be documented
+.ti -4
+6.  Procedures/Functions Calling:  names of procedures and functions
+that call this module
+.ti -4
+7.  Local Variables: names and descriptions of every local variable
+.ti -4
+8.  Global Variables Used (and how modified):  names of all global
+variables used and how the module modifies them
+.ti -4
+9.  Global Constants: names and description of globals [This section
+would be found in the main program only.]
+.ti -4
+10. Bugs:  known input values or conditions for which a module will not
+perform properly
+.in -4
+.sp 2
+(b)  Comments explain code which is otherwise unclear.
+.br
+When every line of code is commented, the obvious question is "If
+the code is obscure enough to require a comment - shouldn't the code
+be rewritten?"  Good code doesn't need imbedded comments; try to
+rewrite unclear code instead of commenting it.
+Clearly this isn't always possible, and imbedded comments may be necessary.
+.sp 1
+Begin comments with a verb if possible.
+For example, "Input number of students",
+"Compute mean value of score", "Convert answer to ascii".
+Avoid phrases such as "The following
+code ...", "Now we compute ...", "Lines 20 thru 28 evaluate ...", "This
+procedure tries to ...".
+.sp
+Comments within code must start in the same column
+(and above) the code it explains, or offset to the right of the code.
+.sp
+.ul
+A comment is of negative value if it is wrong or does not agree with the code.
+.sp 1
+.in-4
+2.  Variable names.
+.in+4
+.sp 1
+Choose meaningful variable names.  Do not over-abbreviate (also known
+as 'Fortranizing') variable names (e.g., ttl for total, lgth for length).
+A good rule of thumb is 5-9 letters for every variable name.  Single
+letter variable names, such as i, j, x, are acceptable only as
+dummy loop variables for tasks such as outputting an array.
+The only reason you need more than 1 dummy variable is for nested
+loops.
+.sp 1
+.in-4
+3.  How to indent code.
+.in+4
+Opinions differ on how to best make code readable, but everyone
+agrees on one rule - Be Consistent.
+.sp 1
+a.  Always indent 3 spaces; not 2, not 5, always 3
+.sp 1
+b.  Align corresponding { }'s and keep code aligned with
+its bounding { }, do not indent again
+.nf
+
+      Correct                  Incorrect
+
+     {                           {
+     -----;                         -----;
+     -----;                         -----;
+	{                              {
+	-----;                            -----;
+	-----;                            -----;
+	-----;                            -----;
+	}                                 }
+     }                                 }
+
+.fi
+.sp 1
+.ne 4
+c.  If statements: always indent the then part under the if.
+.nf
+.sp
+     if (relation)
+	x = 5;
+
+.ne 6
+     if (relation)
+	{
+	-----;
+	-----;
+	-----;
+	}
+.ne 14
+d.  If-then-else statements: align the words if and else,
+and align the then and else code portion
+.nf
+
+     if (relation)  /* comment on primary relational test */
+	{
+	-----;
+	-----;
+	}
+     else
+	/* comment on initial else */
+	{
+	-----;
+	-----;
+	if (relation)
+	   -----;
+	else
+	   /* comment on the purpose of the deeper else */
+	   {
+	   -----;
+	   -----;
+	   }
+	}
+.sp
+.ne 14
+e. switch statement: align the cases with the {}'s, indent each case's code
+
+     switch (nextchar)
+	{
+	case 'a':
+	   -----;
+	   -----;
+	   break;
+
+	case 'b':
+	case 'c':
+	   -----;
+	   break;
+
+	default:
+	   -----;
+	   -----;
+	}
+.sp
+.ne 4
+f. for and while statements: always indent the body of the loop
+
+      for (i=1; i<10; i++)
+	 array[i] = 0;
+
+.ne 5
+      while (relation)
+	 {
+	 ------;
+	 ------;
+	 }
+.fi
+.in-4
+.sp 1
+4.  Miscellaneous Rules
+.sp 1
+.in+4
+Order modules in some logical manner, either alphabetically or according
+to function.  For instance, there might be 3 procedures which perform
+output routines.  They should be grouped together.
+An index showing on what page each module can be found is a good idea when
+there are more than 10 modules.
+.sp 1
+Besides performing a computerized function, code should be
+written to achieve three main goals.
+.br
+.in+4
+Clarity (Readability)
+.br
+Maintainability (easy for someone else to modify)
+.br
+Portability (even if you never plan to move it to another machine)
+.sp 1
+.in-4
+Some rules which help achieve these goals are:
+.sp 1
+Keep things simple. (KISS - Keep It Simple Stupid)
+.br
+.in+4
+Use simple control structures (goto's aren't simple)
+.br
+Simple does not mean short, nor does it mean executes fastest.
+.sp 1
+.in-4
+Modularize different functions.
+.in+4
+If you find a block of code that performs a single function and is used
+in more than one place in a program,
+you should probably make the block a separate module.
+.sp 1
+Keep modules short (less than 1 page? 40-50 lines of code?)
+.sp
+A good module is written such that the module can later be
+changed (maybe a better algorithm for the same function) without
+having to rewrite other modules.
+.sp 1
+.in-4
+Do not use constants (i.e., magic numbers)
+in a program (perhaps with the exception of the
+constants 0, 1, -1); instead use #define's.
+.sp 1
+Minimize, if not avoid, the use of global variables. (You need a
+good reason for using globals and 'it is easier than passing
+variables as parameters' is NOT a good reason.)
+.sp 1
+Avoid assumptions about the underlying machine (such as word length -
+character set, etc.)
+.sp 1
+Except for static local variables, put all initialization statements
+in a procedure entitled "initialize"
+and call it at the beginning of the main program.
+.sp 1
+Reference:
+.ul
+The Elements of Programming Style
+by Kernighan & Plauger, McGraw-Hill, 1974.
+.sp 1
+.in-4
+4.  Example program.
+.sp 1
+.in+4
+The following program is not perfect, but is a good example of  well
+documented code.  Student suggestions for improvement are welcome.
+     (also found in    ~amer/examples/c.program.c  on vax1)
+
+
+.nf
+/************************************************************************
+ *           Assignment 1:  A Structured Program                        *
+ *                                                                      *
+ * Programmer: Paul Amer                  Due Date: April 16, 1984      *
+ * Course: C courses                      Revised:  August, 23 1986     *
+ ************************************************************************
+1. Purpose:
+   This program serves two purposes.  First, it is a general example of
+   how to properly document and structure a C program.  Second, it finds
+   the root of a function when it is given the function, an interval
+   to search, and the accuracy with which the root is to be found.
+
+   Four conditions must be satisfied for the program to work:
+   1) The function, f,  must be a polynomial of degree 10 or less,
+   2) The interval contains exactly one real root,
+   3) f(lower) and f(upper) have opposite signs where lower is the lower
+      endpoint and upper is the upper endpoint of the interval.
+   4) User must input correct data.
+
+   Three methods are used to numerically approximate the root in the
+   given interval: (1) bisection (2) secant (3) Newton's. Each method is
+   explained in detail in its associated procedure below.
+
+2. Paul Amer,  August 1984
+
+3. Inputs:
+   User is prompted for a polynomial, its degree, upper and lower initial
+   interval endpoints, and an epsilon to control the accuracy of computation.
+
+4. Outputs:
+   The program prints the root of the polynomial as computed by three
+   independent methods.  Also, the number of iterations necessary to
+   derive each solution is outputted.
+
+5. Procedures/Functions called: bisection, secant, Newton, Horner
+
+6. Procedures/Functions calling: none
+
+7. Local Variables:
+   i       -- dummy loop counter for work with the polynomial
+   epsilon -- amount of error allowed when finding the root
+   lower   -- lower endpoint of the interval being searched
+   upper   -- upper endpoint of the interval being searched
+   poly_coeffs -- coefficients of the polynomial
+   degree  -- degree of the user's polynomial
+
+8. Global Variables (and how modified in this module): None
+
+9. Global Constants:
+   MAXDEGREE -- the maximum degree for any polynomial input
+   RSTARS    -- used for ease of reading when printing out roots
+   STARS     -- used for ease of reading when printing out the polynomial
+   TAB       -- equal to four spaces, used to separate output
+
+10. Bugs:  this program has never been compiled and executed!
+********************************************************************/
+
+#define MAXDEGREE 10
+#define RSTARS "**************************************************************"
+#define STARS "***************************************************"
+#define TAB "    "
+
+/******************************************************************
+*                                                                 *
+*                       MAIN PROGRAM                              *
+*                                                                 *
+******************************************************************/
+main( )
+   {
+   int i, degree;
+   float epsilon, lower, upper, poly_coeffs[MAXDEGREE+1];
+   float Horner( );
+
+   printf( "Input the degree of the polynomial:\n" );
+   scanf( "%d", &degree );
+
+   /* check if degree of polynomial to be solved is out of range */
+   while ((degree <= 0) || (degree > MAXDEGREE))
+      {
+      if ( degree < 0 )
+	 printf("The only polynomial with negative degree is 0.\n");
+      else if (degree == 0)
+	      printf("Constant polynomials do not have roots.\n");
+	   else
+	      printf("Polynomial too large for program.\n");
+
+      printf("Reenter degree between 0 and %d inclusive:\n", MAXDEGREE);
+      scanf("%d", &degree);
+      }
+
+   /* read coefficients of polynomial */
+   for (i=0; i<=degree; i++)
+      {
+      printf("Enter the coefficient of x^%d term:\n", i);
+      scanf("%f", &poly_coeffs[i]);
+      }
+
+   printf("Input the lower and upper bounds of the region to be searched:\n");
+   scanf("%f %f", &lower, &upper);
+   printf("Input the amount of error allowable when finding the root:\n");
+   scanf("%f", &epsilon);
+
+   /* output the polynomial */
+   printf("\n");
+   for (i=degree; i>=0; i--)
+      {
+      printf("%s\n\n", STARS );
+      printf("*%sCoefficent of x^%d term%s*%s%8.4f%s*\n\n",
+	 TAB, i, TAB, TAB, poly_coeffs[i], TAB);
+      }
+   printf("%s\n", STARS);
+
+   /* check if either endpoint is a root, if not, compute roots in three ways*/
+   if (Horner(poly_coeffs, lower, degree) == 0.0)
+      printf("Root is exactly: %f\n", lower);
+   else if (Horner(poly_coeffs, upper, degree) == 0.0)
+	   printf("Root is exactly: %f\n", upper);
+	else
+	   {
+	   Newton(poly_coeffs, lower, upper, epsilon, degree);
+	   secant(poly_coeffs, lower, upper, epsilon, degree);
+	   bisection(poly_coeffs, lower, upper, epsilon, degree);
+	   }
+   }
+
+/***************************************************************************
+*                                                                          *
+*                       procedure bisection                                *
+*                                                                          *
+****************************************************************************
+1. Purpose
+  Procedure bisection numerically approximates the root of a polynomial
+  using the "bisection method".  This method uses the following recursive
+  formula:
+      mid = ( lower + upper ) / 2;
+      if ( sign( f( lower ) ) == sign( f( mid ) ) )
+	  lower = mid;
+      else
+	  upper = mid;
+  This means that an interval [lower,upper] is halved after each
+  iteration.  If the function evaluated at the half way point is the same
+  as the lower bound, the root must lie within the interval [mid, upper].
+  Otherwise the root lies within the interval [lower, mid]. The variables
+  lower and upper are reassigned to reflect this new knowledge and the
+  process is reiterated until the difference between the upper and lower
+  bounds is becomes less than a certain error.
+
+2. Paul Amer, August 1984
+
+3. Input Parameters:
+      fofx  -- array of coefficients of a polynomial
+      lower -- lower endpoint of interval containing the root
+      upper -- upper endpoint of interval containing the root
+      epsilon -- controls accuracy of solution by bounding the minimum
+		 difference between upper and lower to be tested
+      degree -- highest degree of all terms in the polynomial
+
+4. Returned Values: None
+
+5. Procedures/Functions called: Horner, sign
+
+6. Procedures/Functions calling: main
+
+7. Local Variables:
+     iterations -- the number of times the bisection is performed
+     bisect_root -- the root as computed by the bisection method
+     mid    -- the midpoint of the interval [lower, upper]
+
+8. Global Variables Used (and how modified):  None
+***************************************************************************/
+bisection(fofx, lower, upper, epsilon, degree)
+float fofx[ MAXDEGREE + 1 ], lower, upper, epsilon;
+int degree;
+   {
+   float mid, bisect_root;
+   int iterations = 0;
+
+   /* perform bisection until within tolerance of answer */
+   while ( upper - lower > epsilon )
+      {
+      mid = ( lower + upper ) / 2;
+
+      /* check signs of function values using sign function */
+      if (sign(Horner(fofx, mid, degree)) == sign(Horner(fofx, lower, degree)))
+	 lower = mid;
+      else
+	 upper = mid;
+
+      /* increment number of times bisection is performed */
+      iterations++;
+      }
+
+   /* assign and output answer */
+   bisect_root = ( lower + upper ) / 2;
+   printf( "\n%s\n\n", RSTARS );
+   printf( "*%sBISECTION       - root is approximately:%s%8.4f%s*\n",
+      TAB, TAB, bisect_root, TAB );
+   printf( "*%sBISECTION       - number of iterations:%s%d%s*\n",
+      TAB, TAB, iterations, TAB );
+   printf( "\n%s\n", RSTARS );
+   }
+
+/******************************************************************
+*                                                                 *
+*                       procedure derivative                      *
+*                                                                 *
+*******************************************************************
+1. Purpose:
+   Procedure derivative computes the derivative of a polynomial
+
+2. Paul Amer, August 1984
+
+3. Input Parameters:
+    fofx  -- array of coefficients of a polynomial
+    degree -- highest degree of all terms in the polynomial
+
+4. Returned Values:
+    deriv_coeffs   -- array which stores the coefficients of the derivative
+	     of the polynomial whose coefficients were passed in fofx.
+
+5. Procedures/Functions Called: None
+
+6. Procedures/Functions Calling: Newton
+
+7. Local Variables:
+     i -- loop counter representing the exponent of a term
+
+8. Global Variables Used (and how modified): None
+******************************************************************/
+derivative(fofx, degree, deriv_coeffs)
+float fofx[MAXDEGREE+1], deriv_coeffs[MAXDEGREE+1];
+int degree;
+   {
+   int i;
+
+   /* clear out array of returned values */
+   for (i=0; i<=MAXDEGREE; i++)
+      deriv_coeffs[i] = 0.0;
+
+   /* transfer the coefficients of original polynomial into deriv_coeffs */
+   for (i=0; i<=degree; i++)
+      deriv_coeffs[i] = fofx[i];
+
+   /* multiply coefficients by powers */
+   for (i=1; i<=degree; i++)
+      deriv_coeffs[i] = i * deriv_coeffs[i];
+
+   /* move coefficients to power-1 */
+   for (i=0; i<degree; i++)
+      deriv_coeffs[i] = deriv_coeffs[i+1];
+
+   /* zero out the "leading" term */
+   deriv_coeffs[degree] = 0.0;
+   }
+
+/******************************************************************
+*                                                                 *
+*                       function Horner                           *
+*                                                                 *
+*******************************************************************
+1. Purpose:
+   Function Horner evaluates a polynomial at a given point using
+   Newton's algorithm for polynomial evaluation (synthetic division)
+
+2. Paul Amer, August 1984
+
+3. Input Parameters:
+      fofx  -- array of coefficients of a polynomial
+      degree -- highest degree of all terms in the polynomial
+      pointx -- point at which the polynomial is to be evaluated
+
+4. Returned Value:
+     The value of the supplied polynomial evaluated at the supplied point
+
+5. Procedures/Functions Called: None
+
+6. Procedures/Functions Calling: Newton, main, secant, bisection
+
+7. Local Variables:
+     poly_at_pointx -- used to compute the sume of terms of the polynomial at
+		  the given point x
+     i    -- a dummy loop counter for multiplications
+
+8. Global Variables Used (and how modified): None
+******************************************************************/
+float Horner(fofx, pointx, degree)
+float fofx[MAXDEGREE+1], pointx;
+int degree;
+   {
+   float poly_at_pointx;
+   int i;
+
+   poly_at_pointx = fofx[degree];
+
+   /* iteratively compute all terms of the polynomial evaluated at x */
+   for (i=degree-1; i>=0; i--)
+      poly_at_pointx = (pointx * poly_at_pointx) + fofx[i];
+
+   return(poly_at_pointx);
+   }
+
+/******************************************************************
+*                                                                 *
+*                       procedure Newton                          *
+*                                                                 *
+*******************************************************************
+1. Purpose:
+   Newton's method is an improvement on the secant method.  It
+   uses the tangent instead of the secant so it coverges faster.
+   Newton numerically approximates the root of a polynomial using
+   "Newton's method".  This method uses the following recursive formula:
+	x    =  x    -    f(x   ) / f'(x   )
+	 k       k-1         k-1        k-1
+  where f' represents the instantaneous derivative at a point on
+  the curve and x  represents the  k th approximation of the root.
+		 k
+
+2. Paul Amer, August 1984
+
+3. Input Parameters:
+      fofx  -- array of coefficients of a polynomial
+      lower -- lower endpoint of interval containing the root
+      upper -- upper endpoint of interval containing the root
+      epsilon -- controls accuracy of solution by bounding the minimum
+		 difference between upper and lower to be tested
+      degree -- highest degree of all terms in the polynomial
+
+4. Returned values:  None
+
+5. Procedures/Functions Called: derivative, abs, Horner
+
+6. Procedures/Functions Calling: main
+
+7. Local Variables:
+     last       the last (x   ) approximation of the root
+			   k-2
+     present    the current (x   ) approximation of the root
+			      k-1
+     next       the next (x ) approximation of the root
+			   k
+     newton_root  -- root of the polynomial computed by "Newton's" method
+     iterations     the number of iterations (k) needed to find the root
+     deriv_coeffs  -- coefficients of polynomial's derivative
+
+8. Global Variables Used (and how modified): None
+******************************************************************/
+Newton(fofx, lower, upper, epsilon, degree)
+float fofx[ MAXDEGREE + 1 ], lower, upper, epsilon;
+int degree;
+   {
+   int iterations = 0;
+   float next, present, last, newton_root, deriv_coeffs[MAXDEGREE+1];
+
+   /* make initial approximations the endpoints of interval */
+   last = lower;
+   present = (upper + lower)/2;
+
+   /* compute derivative of function */
+   derivative(fofx, degree, deriv_coeffs);
+
+   /* while approximations > tolerance use Newton's method */
+   while (abs(present - last) > epsilon)
+      {
+      next = present - (Horner(fofx, present, degree)
+			   / Horner(deriv_coeffs, present, degree));
+
+      /* prepare for next iteration */
+      last = present;
+      present = next;
+
+      /* increment number of times Newton's method is thus far performed */
+      iterations++;
+      }
+
+   /* assign and output answer */
+   newton_root = present;
+   printf("\n%s\n\n", RSTARS);
+   printf("*%sNEWTONS'S METHOD - root is approximately:%s%8.4f%s*\n",
+      TAB, TAB, newton_root, TAB);
+   printf("*%sNEWTON'S METHOD - number of iterations:%s%d%s*\n",
+      TAB, TAB, iterations, TAB);
+   printf("\n%s\n", RSTARS);
+   }
+
+/******************************************************************************
+*                                                                             *
+*                       procedure secant                                      *
+*                                                                             *
+*******************************************************************************
+1. Purpose:
+   Procedure secant numerically approximates the root of a polynomial using
+   the "secant method". This method uses the following recursive formula:
+	       x    =  x    -    f(x   ) / m
+		k       k-1         k-1
+
+	   f(x   ) - f(x   )      which is the slope of the curve for the
+	      k-1       k-2       interval containing the points
+				  x    and x     which are the k-1 st and
+  where m =  _________________      k-1      k-2
+				  and k-2 nd approximations of the root.
+	     x     -   x          m is the secant.
+	       k-1       k-2
+
+2. Paul Amer, August 1984
+
+3. Input Parameters:
+     fofx  -- array of coefficients of a polynomial
+     lower -- lower endpoint of interval containing the root
+     upper -- upper endpoint of interval containing the root
+     epsilon -- controls accuracy of solution by bounding the minimum
+		difference between upper and lower to be tested
+     degree -- highest degree of all terms in the polynomial
+
+4. Returned Values: None
+
+5. Procedures/Functions Called:  Horner, abs
+
+6. Procedures/Functions Calling:  main
+
+7. Local Variables:
+     last       the last (x   ) approximation of the root
+			   k-2
+     present    the current (x   ) approximation of the root
+			      k-1
+     next       the next (x ) approximation of the root
+			   k
+     iterations  -- number of iterations (k) needed to find the root
+     secant_root  -- a root of the polynomial as found by "secant" method
+
+8. Global Variables Used (and how modified): None
+******************************************************************************/
+secant(fofx, lower, upper, epsilon, degree)
+float fofx[MAXDEGREE+1], lower, upper, epsilon;
+int degree;
+   {
+   float Horner( );
+   float last, next, present, secant_root;
+   int iterations = 0;
+
+   /* make initial approximations the endpoints of the interval */
+   last = lower;
+   present = upper;
+
+   /* use secant method while approximation is not accurate enough */
+   while (abs(present - last) > epsilon)
+      /* calculate next approximation of root */
+      {
+      next = present - (Horner(fofx, present, degree) /
+	 ((Horner(fofx, present, degree) - Horner(fofx, last, degree)) /
+	    (present - last)));
+      last = present;
+      present = next;
+      iterations++;
+      }
+
+   /* assign and output answer */
+   secant_root = present;
+   printf("\n%s\n\n", RSTARS);
+   printf("*%sSECANT   METHOD - root is approximately:%s%8.4f%s*\n",
+      TAB, TAB, secant_root, TAB);
+   printf("*%sSECANT   METHOD - number of iterations :%s%d%s*\n",
+      TAB, TAB, iterations, TAB);
+   printf("\n%s\n", RSTARS);
+   }
+
+/******************************************************************
+*                                                                 *
+*                       function sign                             *
+*                                                                 *
+*******************************************************************
+1. Purpose:
+   Function sign tests whether or not a supplied floating point
+   value is positive (0 is considered positive)
+
+2. Paul Amer, August 1984
+
+3. Input Parameters:
+     number -- a floating point value to be tested
+
+4. Returned Values:
+     function is 1 if number is positive (>=0)
+		 0 if number is negative
+
+5. Procedures/Functions Called: None
+6. Procedures/Functions Calling: bisection
+7. Local Variables: None
+8. Global Variables Used (and how modified): None
+*********************************************************************/
+sign(number)
+float number;
+   {
+   if (number >= 0.0)
+      return(1);
+   else
+      return(0);
+   }

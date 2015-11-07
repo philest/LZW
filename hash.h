@@ -85,7 +85,10 @@ hashIncrUse(hash_table *h, int code);
 	2) Every code with a use count >= prune_bar; and
 	3) Every non-empty prefix of these table entries. */
 hash_table *
-hashPrune(hash_table *h, int prune_bar);
+hashPrune(hash_table *h, int prune_bar, bool encode);
+
+void
+hashDecodeUseUpdate(hash_table *h);
 
 
 /********************************************************

@@ -6,3 +6,7 @@
     > invalid?  (Your program gives an "invalid entry" error).
 
     decode -o -> to encode -i 
+
+    fread and fwrite it yo!
+
+    argument checks!

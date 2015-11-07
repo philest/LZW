@@ -90,7 +90,7 @@ main(int argc, const char* argv[])
 	else if (strcmp((*argv+(strlen(argv[0]) - 6)), "decode") == 0)
 		decode(output_file);
 	else
-		test();
+		DIE("%s", "not designed to be accessed this way!");
 }
 
 
@@ -169,9 +169,9 @@ hash_table *read_table(char*fname, int max_bits)
 
 //when did you mark bits
 	// #define PTABLE 1
-	// #define COMPARE_TABLES 1
+// #define COMPARE_TABLES 1
 
-// #define PTABLE 1
+// #define B_TABLE 1
 
 
 void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
@@ -218,12 +218,13 @@ void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 			}
 		else //new code!
 		{	
-			new_num_bits = hashGetNumBits(table);
+			if(new_num_bits < max_bits || hashGetNumBits(table) < new_num_bits) // don't increase if reached maxbits
+				new_num_bits = hashGetNumBits(table);
 
 			//write the prefix 
 			#ifndef COMPARE_TABLES
 				
-				if (new_num_bits != old_num_bits) //signal an bit increase
+				if (!prune_now && new_num_bits > old_num_bits) //signal an bit increase
 					{
 						putBits(old_num_bits, INC_BIT_CODE);
 
@@ -232,38 +233,58 @@ void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 						#endif
 					}
 
+				while(!prune_now && new_num_bits < old_num_bits)
+				{
+					putBits(old_num_bits, DEC_BIT_CODE);
+					old_num_bits--;
+				}
+
 				putBits(new_num_bits, code);
 
 				if (prune_now) //last read said to prune (filled table)
 				{
-					table = hashPrune(table, prune_bar); //replace table with pruned table
+					#ifdef B_TABLE
+						hashPrintTable(table, true);
+						exit(0);
+					#endif
+
+					table = hashPrune(table, prune_bar, true); //replace table with pruned table
 					putBits(new_num_bits, PRUNE_CODE);
-					prune_now = false; //reset
 
 					#ifdef PTABLE
 						hashPrintTable(table, true);
 						exit(0);
 					#endif
 
+					// find it's new code in table
+
+
+
 				}
 
 			#endif
 
-			#ifdef COMPARE_TABLES
-				printf("code: -%d-\n", code);
-			#endif
+			// #ifdef COMPARE_TABLES
+			// 	printf("code: -%d-\n", code);
+			// #endif
 
 
 			//if room: put the new prefix, char pair in table
-			if (!hashFull(table))
-				hashInsert(table, code, k, hashGetN(table) + NUM_SPEC_CODES, 0);
-			
+			if (!hashFull(table) && !prune_now)
+				{
+					hashInsert(table, code, k, hashGetN(table) + NUM_SPEC_CODES, 0);	
+				}	
+
+			prune_now = false;
+
 			//make that final character the new prefix code
 			ent = hashLookup(table, EMPTYCODE, k);
+			hashIncrUse(table, ent->code);
+
 			code = hashGetCode(ent);
 
-			//increment that char's use count
-			hashIncrUse(table, code); //increment use count
+			// //increment that char's use count
+			// hashIncrUse(table, code); //increment use count
 
 			if (hashFull(table) && prune_bar != DONT_PRUNE) //JUST became full: prune now.
 			{
@@ -316,8 +337,8 @@ void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
   //#define TEST 1
  //#define COMPARE_TABLES 1
   // #define COMPARE_TABLES 1
-  //  #define PTABLE 1
- #define DEBUG 1		
+   // #define PTABLE 1
+ // #define DEBUG 1		
 
  //#define WHERE 1 
 
@@ -325,12 +346,13 @@ void encode(int max_bits, char*output_file, char *input_file, int prune_bar)
 void decode(char* output_file)
 {	
 	int currByte = 1;
+	// bool just_pruned = false;
 
 	//bool just_pruned = false; //was pruned last pass?
 //	#define DEBUG 1 
 
 	#ifdef DEBUG
-		char *comp_file = "alice";
+		char *comp_file = "C-Delaware";
 		FILE *cmp_file = fopen(comp_file, "r");
 	#endif
 
@@ -341,6 +363,7 @@ void decode(char* output_file)
 
 	int numBits = 9; // table full of 256 default one char codes + 2 spec char
 
+	int kwk[2] = {0,0}; // no kwk code to add
 
 	//read max bits signal!
 	status = scanf("%d %s %d\n", &max_bits, input_file_name, &prune_bar);
@@ -371,7 +394,16 @@ void decode(char* output_file)
 
 		if (code == PRUNE_CODE && prune_bar != DONT_PRUNE)
 			{	
-				table = hashPrune(table, prune_bar);
+
+				//update use counts
+				// hashDecodeUseUpdate(table);
+
+				#ifdef B_TABLE
+					hashPrintTable(table, true);
+					exit(0);
+				#endif
+
+				table = hashPrune(table, prune_bar, false);
 				#ifdef PTABLE
 					hashPrintTable(table, true);
 					exit(0);
@@ -388,9 +420,20 @@ void decode(char* output_file)
 
 		if (code == INC_BIT_CODE)
 		{
-			numBits++;
+			if (numBits < max_bits) 
+				numBits++;
+
 			continue;
 		}
+
+		if (code == DEC_BIT_CODE)
+		{
+			if (numBits > 9)
+				numBits--;
+			
+			continue;
+		}
+
 
 		assert(numBits <= max_bits);
 
@@ -415,12 +458,22 @@ void decode(char* output_file)
 		if (code == EMPTYCODE)
 			WARN("Empty code found at byte %d", currByte);
 
-			// unknown code found!
+
+
+
+			// unknown code found! kwk case
 		if ((e = hashCodeLookup(table, code)) == NULL)
 		{
 			stackPush(kstack, final_char); //add the last char to stack
 			code = oldCode; //output the string rep'd by prefix code
+
+			// remember the kwk signature
+			kwk[0] = oldCode;
+			kwk[1] = final_char;
 		}
+		// else // a valid code, update use count. 
+		// 	hashIncrUse(table, code);
+
 
 		e = hashCodeLookup(table, code); //find pair in table
 	  	if(e == NULL)
@@ -428,8 +481,8 @@ void decode(char* output_file)
 			DIE("%s", "An unknown code-- and not kwkwk case-- was found\n");
 		}
 
-		if (e->prefix == EMPTYCODE)	//for single char strs
-			hashIncrUse(table, e->code);
+		// if (e->prefix == EMPTYCODE)	//for single char strs
+		// 	hashIncrUse(table, e->code);
 
 
 		   //until the prefix is empty, accumulate chars
@@ -455,9 +508,9 @@ void decode(char* output_file)
 			currByte++;
 
 		#ifndef COMPARE_TABLES
-		putchar(final_char);
+		putchar(final_char);	//increment code for the final k! 
 		#endif
-
+		hashIncrUse(table, final_char + NUM_SPEC_CODES); 
 
 		while(!stackEmpty(kstack)) //write the string just read
 		{						   //from prefix-dive
@@ -478,8 +531,22 @@ void decode(char* output_file)
 
 								              //insert the prefix (oldCode), 
 		if (oldCode != EMPTYCODE && !hashFull(table))             //char (final_char) pair in table
-			hashInsert(table, oldCode, final_char, hashGetN(table) + NUM_SPEC_CODES, 0);
-		
+			{
+				hashInsert(table, oldCode, final_char, hashGetN(table) + NUM_SPEC_CODES, 0);
+				
+				if (oldCode == kwk[0] && final_char == kwk[1])
+					{
+						hashIncrUse(table, hashGetN(table) + NUM_SPEC_CODES - 1);
+						 //kwk just inserted
+						
+						//reset the values
+						kwk[0] = 0;
+						kwk[1] = 0;
+					}
+
+			}
+
+
 		oldCode = newCode;
 
 
@@ -510,6 +577,9 @@ void decode(char* output_file)
 
 void test()
 {
+
+hash_table *table = hashCreate(400);
+hashDestroy(table);
 
 }
 

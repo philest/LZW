@@ -17,6 +17,7 @@ Date	Time	Spent	Work completed
 11/03	20:00	2:00	String table IO
 11/04	19:00	1:30	Compressed table IO.
 11/05	10:00	1:45	Pruning.
+11/05	19:00	2:00	A better pruning algorithim.
 
 		TOTAL:	
 
